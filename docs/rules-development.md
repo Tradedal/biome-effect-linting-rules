@@ -84,7 +84,7 @@ A repair invalidates checks whose inputs it changes. Retain passing results for 
 
 ## Verify preset and package use
 
-After isolated validation, the author registers a new rule in its appropriate preset and `configs/full.jsonc`. Plugin paths use `./node_modules/@catenarycloud/linteffect/rules/` so consumer projects can resolve the published files. The author then runs `yarn projen` and reviews the generated `biome.local.jsonc` with the preset changes.
+After isolated validation, the author registers a new rule in its appropriate preset and `configs/full.jsonc`. Plugin paths use `./node_modules/@tradedal/linteffect/rules/` so consumer projects can resolve the published files. The author then runs `yarn projen` and reviews the generated `biome.local.jsonc` with the preset changes.
 
 Configuration changes are checked through installed-project use and CLI use. The CLI check must exercise the command that loads packaged rule contents into the WASM filesystem. A checkout path check does not test that behavior. Package settings and generated tasks are changed through `.projenrc.ts`, regenerated, and verified with `yarn build` so the next regeneration preserves the change.
 

@@ -26,7 +26,7 @@ const Preset = Schema.fromJsonString(
   Schema.Struct({ plugins: Schema.Array(Schema.String) }),
 );
 const PluginPath = Schema.TemplateLiteralParser([
-  "./node_modules/@catenarycloud/linteffect/",
+  "./node_modules/@tradedal/linteffect/",
   Schema.NonEmptyString,
 ]);
 const PresetName = Schema.Literals(["core", "web", "ts-type", "full"]);
@@ -68,7 +68,7 @@ const formatDiagnostic = (
 
 /** ProjectChecks loads package presets and reports diagnostics for requested files. */
 export class ProjectChecks extends Context.Service<ProjectChecks>()(
-  "@catenarycloud/linteffect/cli/ProjectChecks",
+  "@tradedal/linteffect/cli/ProjectChecks",
   {
     make: Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

@@ -36,7 +36,7 @@ const PluginSettings = Schema.Struct({
 
 /** Biome provides scoped source analysis for the CLI and fixture tests. */
 export class Biome extends Context.Service<Biome>()(
-  "@catenarycloud/linteffect/biome",
+  "@tradedal/linteffect/biome",
   {
     make: Effect.gen(function* () {
       yield* Effect.try(main);

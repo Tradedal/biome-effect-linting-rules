@@ -23,7 +23,7 @@ const FixtureFilename = Schema.Tuple([
  * Discovery uses the result to identify the case; the runner checks its outcome.
  */
 export class FixtureParser extends Context.Service<FixtureParser>()(
-  "@catenarycloud/linteffect/tests/support/fixtureParser",
+  "@tradedal/linteffect/tests/support/fixtureParser",
   {
     make: Effect.sync(() => {
       /**

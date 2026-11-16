@@ -90,14 +90,13 @@ const synthesize = Effect.fn("synthesize")(function* () {
     npmAccess: javascript.NpmAccess.PUBLIC,
     npmDistTag: "latest",
     packageManager: javascript.NodePackageManager.YARN_BERRY,
-    packageName: "@catenarycloud/linteffect",
+    packageName: "@tradedal/linteffect",
     prettier: false,
     releaseToNpm: true,
     release: true,
     releaseTrigger: ReleaseTrigger.workflowDispatch(),
     releasableCommits: ReleasableCommits.featuresAndFixes(),
-    repository:
-      "https://github.com/OperationalFallacy/biome-effect-linting-rules.git",
+    repository: "https://github.com/Tradedal/biome-effect-linting-rules.git",
     workflowNodeVersion: "24.11.1",
     workflowBootstrapSteps: [
       {
@@ -143,7 +142,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
 
   project.package.addField("repository", {
     type: "git",
-    url: "https://github.com/OperationalFallacy/biome-effect-linting-rules.git",
+    url: "https://github.com/Tradedal/biome-effect-linting-rules.git",
   });
 
   project.package.addField("exports", {
@@ -314,7 +313,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
       root: true,
       extends: ["./biome.base.jsonc"],
       plugins: preset.plugins.map((plugin) =>
-        plugin.replace("./node_modules/@catenarycloud/linteffect/", "./"),
+        plugin.replace("./node_modules/@tradedal/linteffect/", "./"),
       ),
     },
   });
@@ -534,7 +533,7 @@ jobs:
         "bump-patch-for-minor-pre-major": true,
         "changelog-path": "CHANGELOG.md",
         "include-component-in-tag": false,
-        "package-name": "@catenarycloud/linteffect",
+        "package-name": "@tradedal/linteffect",
         prerelease: true,
         "prerelease-type": "dev",
         "release-type": "node",

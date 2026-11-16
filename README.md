@@ -8,7 +8,9 @@
 
 The rules identify anti-patterns such as nested `Effect.gen` blocks and consecutive operations written with `Effect.all`. Each diagnostic explains the pattern and suggests how to rewrite the code.
 
-The rules target Effect 4. Version 0.0.9 is the final release for Effect v3.
+The package moved from `@catenarycloud/linteffect` to `@tradedal/linteffect`. Earlier releases remain available under the original name.
+
+The rules target Effect 4. Version 0.0.9 of `@catenarycloud/linteffect` is the final release for Effect v3.
 
 You can use the full rule set or choose a smaller preset. Start with a smaller preset to introduce the rules to an established project.
 
@@ -39,7 +41,7 @@ In this demo, Codex uses the rules to refactor [Messages.ts from the Effect Disc
 You can check your code with `npx` without changes to your project's dependencies or configuration. Run this command from your project directory:
 
 ```bash
-npx @catenarycloud/linteffect check src --preset=core
+npx @tradedal/linteffect check src --preset=core
 ```
 
 The command requires Node.js 24 or newer. It checks `src` with the core preset and leaves your source files unchanged. It runs Biome's WebAssembly engine in the same Node.js process, independently of your project's Biome settings. It loads the selected rules into an isolated in-memory workspace and creates no temporary configuration files.
@@ -51,12 +53,12 @@ Choose `core`, `web`, `ts-type`, or `full` with `--preset`. The [preset table](#
 The package includes a [lint guide](./docs/linting.md) for agents to fix lint errors and check the result. Add `--guide` to include its text in the command output, before the diagnostics:
 
 ```bash
-npx @catenarycloud/linteffect check src --preset=core --guide
+npx @tradedal/linteffect check src --preset=core --guide
 ```
 
 If an agent runs this command, it can read the guide along with the lint results.
 
-Use `--help` for the command options. To try a prerelease, use `@catenarycloud/linteffect@dev` in the command.
+Use `--help` for the command options. To try a prerelease, use `@tradedal/linteffect@dev` in the command.
 
 ## Add it to your project
 
@@ -65,22 +67,22 @@ Use `--help` for the command options. To try a prerelease, use `@catenarycloud/l
 Install Biome and the rules with your project's package manager:
 
 ```bash
-npm install -D @biomejs/biome @catenarycloud/linteffect
+npm install -D @biomejs/biome @tradedal/linteffect
 ```
 
 ```bash
-yarn add -D @biomejs/biome @catenarycloud/linteffect
+yarn add -D @biomejs/biome @tradedal/linteffect
 ```
 
 ```bash
-pnpm add -D @biomejs/biome @catenarycloud/linteffect
+pnpm add -D @biomejs/biome @tradedal/linteffect
 ```
 
 Create a `biome.json` or `biome.jsonc` with the core preset in `extends`. If you already have either file, add the preset to its `extends` array and keep the rest of your configuration:
 
 ```jsonc
 {
-  "extends": ["@catenarycloud/linteffect/core"]
+  "extends": ["@tradedal/linteffect/core"]
 }
 ```
 
@@ -104,10 +106,10 @@ To change presets, replace the package path in `extends` with one from this tabl
 
 | Package path | Rules included |
 | --- | --- |
-| `@catenarycloud/linteffect` | The full preset, also available as `@catenarycloud/linteffect/recommended` |
-| `@catenarycloud/linteffect/core` | Effect composition, control flow, and execution order |
-| `@catenarycloud/linteffect/web` | React hooks, atom access, state updates, and Vanilla Extract styles |
-| `@catenarycloud/linteffect/ts-type` | Type assertions, data guards, optional values, and string statuses |
+| `@tradedal/linteffect` | The full preset, also available as `@tradedal/linteffect/recommended` |
+| `@tradedal/linteffect/core` | Effect composition, control flow, and execution order |
+| `@tradedal/linteffect/web` | React hooks, atom access, state updates, and Vanilla Extract styles |
+| `@tradedal/linteffect/ts-type` | Type assertions, data guards, optional values, and string statuses |
 
 ### Lint findings
 
@@ -154,6 +156,8 @@ Configure your editor to use the project's TypeScript installation. In VS Code, 
 ## Develop and contribute
 
 Clone this repository and install its development dependencies with `yarn install`. Run `yarn test` to check the rules and `yarn build` to regenerate project files, run the tests, and create the npm archive.
+
+Until the first stable release under the new scope, development checks use the stable package under its original name.
 
 `yarn lint` checks implementation code with the installed `@catenarycloud/linteffect@latest` package. `yarn lint:dev` selects that installed package explicitly. Yarn locks the stable release; run `yarn up -R @catenarycloud/linteffect` to update that resolution without replacing the latest tag with a version range.
 

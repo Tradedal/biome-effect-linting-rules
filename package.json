@@ -1,9 +1,9 @@
 {
-  "name": "@catenarycloud/linteffect",
+  "name": "@tradedal/linteffect",
   "description": "Biome Grit rules for declarative Effect TypeScript composition and repository-wide style consistency.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OperationalFallacy/biome-effect-linting-rules.git"
+    "url": "https://github.com/Tradedal/biome-effect-linting-rules.git"
   },
   "bin": "./bin/linteffect.mjs",
   "scripts": {

@@ -20,7 +20,7 @@ const ExpectedDiagnostics = {
 
 /** FixtureRunner accepts examples only when their selected rule and combined checks agree. */
 export class FixtureRunner extends Context.Service<FixtureRunner>()(
-  "@catenarycloud/linteffect/tests/support/fixtureRunner",
+  "@tradedal/linteffect/tests/support/fixtureRunner",
   {
     make: Effect.gen(function* () {
       const repository = yield* FixtureRepository;

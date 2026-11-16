@@ -2,7 +2,7 @@
 
 ## Project
 
-`lintEffect` publishes `@catenarycloud/linteffect`, a collection of Biome Grit rules for Effect v4 TypeScript projects. The package contains rules, preset configurations, and a CLI. Grit files match source syntax and emit diagnostics; the tests run those rules through Biome.
+`lintEffect` publishes `@tradedal/linteffect`, a collection of Biome Grit rules for Effect v4 TypeScript projects. The package contains rules, preset configurations, and a CLI. Grit files match source syntax and emit diagnostics; the tests run those rules through Biome.
 
 ## Repository layout
 
@@ -42,7 +42,7 @@ Code examples must compile and pass the repository's lint checks. Invalid exampl
 
 Rule changes need paired fixtures for the same task before and after the correction. Define each dependency and preserve the result, failure behavior, and side-effect order. Use generic names and invented data for application feedback. Test the diagnostic's location and severity as well as whether it appears. Follow the [guide for fixture comments](docs/rules-development.md#write-fixtures-as-learning-examples).
 
-For a new rule, register it in the appropriate presets and `configs/full.jsonc`, then run `yarn projen` to update `biome.local.jsonc`. Preset plugin paths use `./node_modules/@catenarycloud/linteffect/rules/`. The CLI reads those files from the package and loads their contents into the WASM memory filesystem for trial runs. Check both installed-project use and CLI use after configuration changes.
+For a new rule, register it in the appropriate presets and `configs/full.jsonc`, then run `yarn projen` to update `biome.local.jsonc`. Preset plugin paths use `./node_modules/@tradedal/linteffect/rules/`. The CLI reads those files from the package and loads their contents into the WASM memory filesystem for trial runs. Check both installed-project use and CLI use after configuration changes.
 
 Edit `.projenrc.ts` for generated package settings, then run `yarn projen`. Review the generated diff before you stage it. `package.json`, `.projen/`, and generated workflow files receive their settings from this source. Release Please manages release version and changelog updates.
 
