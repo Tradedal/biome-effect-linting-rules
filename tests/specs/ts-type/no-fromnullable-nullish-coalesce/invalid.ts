@@ -21,7 +21,7 @@ export const prepareInvitation = Effect.fn("prepareInvitation")(function* (
 ) {
   const request = yield* Schema.decodeUnknownEffect(InvitationRequest)(input);
 
-  // Neither fallback changes which address receives the invitation.
+  // It incorrectly normalizes absence before Option.fromNullishOr.
   const recipient = yield* Option.fromNullishOr(request.recipient ?? null).pipe(
     Option.orElse(() =>
       Option.fromNullishOr(request.accountEmail ?? undefined),

@@ -1,5 +1,5 @@
 {
-  "input": "import { Effect } from \"effect\";\n\n/**\n * The rejection incorrectly throws from Effect.sync. That makes the expected\n * rejection a defect instead of a typed failure that callers can handle with\n * Effect recovery.\n */\nexport const reject = Effect.sync(() => {\n  // throw incorrectly turns this expected rejection into a defect outside ordinary recovery.\n  throw new Error(\"Rejected\");\n});\n\n/**\n * handled cannot recover the expected rejection because reject incorrectly\n * throws it as a defect. Effect.catch never receives that error to select the\n * rejection outcome.\n */\nexport const handled = reject.pipe(\n  // The throw incorrectly bypasses this caller's ordinary error recovery.\n  Effect.catch(() => Effect.succeed({ rejected: true })),\n);\n",
+  "input": "import { Data, Effect, Option } from \"effect\";\n\ninterface Session {\n  readonly displayName: string;\n}\n\nclass SessionMissing extends Data.TaggedError(\"SessionMissing\") {}\n\n/**\n * requireSession returns the active session or refuses access when it is absent.\n * The absent branch throws an expected rejection as a defect. sessionMessage\n * cannot convert that defect into its sign-in prompt through ordinary recovery.\n */\nexport const requireSession = Effect.fn(\"requireSession\")(\n  (session: Option.Option<Session>) =>\n    Option.match(session, {\n      onSome: Effect.succeed,\n      onNone: () =>\n        Effect.sync(() => {\n          // It incorrectly throws the expected SessionMissing rejection as a defect.\n          throw new SessionMissing();\n        }),\n    }),\n);\n\n/**\n * sessionMessage welcomes an active user or asks an unauthenticated user to\n * sign in. Effect.match handles typed failures, so the thrown rejection prevents\n * the sign-in prompt from being returned.\n */\nexport const sessionMessage = Effect.fn(\"sessionMessage\")(\n  (session: Option.Option<Session>) =>\n    requireSession(session).pipe(\n      // It correctly handles typed failures, but the thrown rejection bypasses it.\n      Effect.match({\n        onFailure: () => \"Please sign in\",\n        onSuccess: ({ displayName }) => `Welcome, ${displayName}`,\n      }),\n    ),\n);\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/no-throw-statement/invalid.ts"
           },
           "span": [
-            356,
-            384
+            720,
+            747
           ],
           "sourceCode": null
         },

@@ -4,7 +4,7 @@ import { Data, Effect, FileSystem, Option, Schema } from "effect";
 
 const ReminderRequest = Schema.Struct({
   recipient: Schema.NonEmptyString,
-  // The decoder supplies false when enabled is missing or undefined.
+  // It correctly defines the enabled default in its schema.
   enabled: Schema.Boolean.pipe(
     Schema.withDecodingDefault(Effect.succeed(false)),
   ),
@@ -49,7 +49,6 @@ export const scheduleReminder = Effect.fn("scheduleReminder")(function* (
           { flag: "wx" },
         ),
       ),
-      // A false flag skips directory creation and the notification write.
       Effect.when(Effect.succeed(request.enabled)),
     );
 

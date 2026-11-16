@@ -40,6 +40,7 @@ export const deliveryMessage = Effect.fn("deliveryMessage")(
     deliverReport(reportId, contents, deliveryDirectory).pipe(
       Effect.map((result) =>
         Match.value(result).pipe(
+          // It incorrectly reconstructs the delivery path from the string status.
           Match.when(
             "sent",
             () =>

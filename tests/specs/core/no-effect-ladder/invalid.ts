@@ -9,8 +9,8 @@ export const formatLineTotal = Effect.fn("formatLineTotal")(function* (
   quantity: unknown,
   unitPrice: unknown,
 ) {
-  // The nested maps incorrectly require an inward lookup to connect quantity and unitPrice to their total.
   return yield* Effect.map(
+    // It incorrectly nests this multiplication map inside the formatting map.
     Effect.map(
       Effect.all({
         quantity: Schema.decodeUnknownEffect(Schema.Int)(quantity),

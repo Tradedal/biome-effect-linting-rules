@@ -14,6 +14,7 @@ export class Counter extends Context.Service<Counter, CounterApi>()(
     make: Effect.gen(function* () {
       const seed = yield* Seed;
       const count = yield* Ref.make(seed.initial);
+
       return { increment: Ref.updateAndGet(count, (value) => value + 1) };
     }),
   },
@@ -24,6 +25,7 @@ export class Counter extends Context.Service<Counter, CounterApi>()(
 }
 export const incrementCounter = Effect.gen(function* () {
   const counter = yield* Counter;
+
   return yield* counter.increment;
 });
 
@@ -38,12 +40,9 @@ export const incrementNamed = Effect.fn("increment")(() =>
   incrementCounter.pipe(Effect.provide(Counter.layer)),
 );
 
-export const makeApi = Effect.sync(() => ({ increment: incrementNamed }));
-
 export const incrementTwice = Effect.gen(function* () {
-  const api = yield* makeApi;
+  const first = yield* incrementNamed();
+  const second = yield* incrementNamed();
 
-  const first = yield* api.increment();
-  const second = yield* api.increment();
   return { first, second };
 });

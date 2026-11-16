@@ -1,12 +1,11 @@
-import { Ref } from "effect";
+import { Effect, Ref } from "effect";
 
 /**
- * readCounter returns the current counter value. It correctly leaves its
- * channels to inference from Ref.get.
- * The implementation determines the return type without a second annotation
- * that can diverge from the composed work.
+ * readCounter returns the current counter value when its Effect runs.
+ * Its return type follows the operation without a separate channel annotation.
  */
-// It correctly infers the return type from Ref.get.
-export function readCounter(counter: Ref.Ref<number>) {
-  return Ref.get(counter);
-}
+export const readCounter = Effect.fn("readCounter")(
+  (counter: Ref.Ref<number>) =>
+    // It correctly infers the channels from the returned operation.
+    Ref.get(counter),
+);

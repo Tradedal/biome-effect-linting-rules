@@ -19,9 +19,9 @@ export const readCatalogView = Effect.fn("readCatalogView")(function* (
 
   return yield* fs.readFileString(filePath).pipe(
     Effect.flatMap(Schema.decodeUnknownEffect(SavedCatalogView)),
-    // The function returns the default view after a read or decode failure.
-    Effect.catch(() =>
-      Effect.succeed(CatalogView.make({ pageSize: 20, showArchived: false })),
+    // It correctly appends the default CatalogView handler after SavedCatalogView decoding.
+    Effect.orElseSucceed(() =>
+      CatalogView.make({ pageSize: 20, showArchived: false }),
     ),
   );
 });

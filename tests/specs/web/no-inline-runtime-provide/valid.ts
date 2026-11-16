@@ -14,6 +14,7 @@ export class Counter extends Context.Service<Counter, CounterApi>()(
     make: Effect.gen(function* () {
       const seed = yield* Seed;
       const count = yield* Ref.make(seed.initial);
+
       return { increment: Ref.updateAndGet(count, (value) => value + 1) };
     }),
   },
@@ -22,29 +23,22 @@ export class Counter extends Context.Service<Counter, CounterApi>()(
     Layer.provide(Seed.layer),
   );
 }
-export const incrementCounter = Effect.gen(function* () {
-  const counter = yield* Counter;
-  return yield* counter.increment;
-});
 
 /**
  * incrementNamed adds 1 to Counter and returns its new count. incrementTwice
- * returns 1 and then 2 because its layer supplies one Counter for both calls.
- * incrementNamed requires that existing Counter, so each call updates the
- * same Ref.
+ * returns 1 and then 2. Its caller provides one Counter around the complete
+ * sequence, so both calls update the same Ref.
  */
-export const incrementNamed = Effect.fn("increment")(
-  // It correctly requires the caller's Counter.
-  () => incrementCounter,
-);
+export const incrementNamed = Effect.fn("increment")(function* () {
+  const counter = yield* Counter;
 
-export const makeApi = Effect.sync(() => ({ increment: incrementNamed }));
+  return yield* counter.increment;
+});
 
 export const incrementTwice = Effect.gen(function* () {
-  const api = yield* makeApi;
+  const first = yield* incrementNamed();
+  const second = yield* incrementNamed();
 
-  const first = yield* api.increment();
-  const second = yield* api.increment();
   return { first, second };
 }).pipe(
   // It correctly provides one Counter for both increments.

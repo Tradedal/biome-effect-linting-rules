@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, String as Str } from "effect";
 
 interface SessionStore {
   readonly read: Effect.Effect<string>;
@@ -11,7 +11,7 @@ interface SessionStore {
  */
 export const loadSession = Effect.fn("loadSession")((store: SessionStore) => {
   // normalize incorrectly separates the session read and trim from loadSession.
-  const normalize = () => Effect.map(store.read, (session) => session.trim());
+  const normalize = () => Effect.map(store.read, Str.trim);
 
   return normalize();
 });
@@ -21,8 +21,8 @@ export const loadSession = Effect.fn("loadSession")((store: SessionStore) => {
  * loadSessionDirect. The extra function separates the public session query
  * from the read and normalization that define it.
  */
-// loadSessionDirect incorrectly adds a forwarding lookup for fromForwarder.
 function loadSessionDirect(store: SessionStore) {
-  return Effect.map(store.read, (session) => session.trim());
+  // It incorrectly separates the session pipeline from fromForwarder.
+  return Effect.map(store.read, Str.trim);
 }
 export const fromForwarder = (store: SessionStore) => loadSessionDirect(store);

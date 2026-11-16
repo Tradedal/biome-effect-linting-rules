@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, String as Str } from "effect";
 
 interface SessionStore {
   readonly read: Effect.Effect<string>;
@@ -11,7 +11,5 @@ interface SessionStore {
  */
 export const loadSession = Effect.fn("loadSession")((store: SessionStore) =>
   // This pipeline correctly keeps the session read and trim inside loadSession.
-  store.read.pipe(Effect.map((session) => session.trim())),
+  store.read.pipe(Effect.map(Str.trim)),
 );
-// fromForwarder correctly reuses the complete operation without a wrapper.
-export const fromForwarder = loadSession;

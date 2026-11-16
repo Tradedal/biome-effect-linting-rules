@@ -7,8 +7,9 @@ import { createElement } from "react";
  * unused declaration together with its className use. The panel's separate
  * margin reset remains in place.
  */
-// It incorrectly exports an empty class used by renderHeading.
-export const heading = style({});
+export const heading =
+  // It incorrectly exports an empty class used by renderHeading.
+  style({});
 
 export const panel = style({ margin: 0 });
 

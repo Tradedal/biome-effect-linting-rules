@@ -1,5 +1,5 @@
 {
-  "input": "const errorFields = (cause: Error) => ({ message: cause.message });\n\n/**\n * The response incorrectly spreads a helper-produced fragment into its body.\n * The reader must inspect errorFields to discover the message field, so the\n * body declaration does not show its complete payload.\n */\nexport const response = (cause: Error) => ({\n  status: 400,\n  body: { type: \"ValidationFailure\", ...errorFields(cause) },\n});\n",
+  "input": "const errorFields = (cause: Error) => ({ message: cause.message });\n\n/**\n * The response incorrectly spreads a helper-produced fragment into its body.\n * The reader must inspect errorFields to discover the message field, so the\n * body declaration does not show its complete payload.\n */\nexport const response = (cause: Error) => ({\n  status: 400,\n  // It incorrectly spreads errorFields into the response body.\n  body: { type: \"ValidationFailure\", ...errorFields(cause) },\n});\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/no-fragmented-const-assembly/invalid.ts"
           },
           "span": [
-            356,
-            408
+            420,
+            472
           ],
           "sourceCode": null
         },

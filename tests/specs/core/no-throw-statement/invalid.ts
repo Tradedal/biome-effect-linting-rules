@@ -1,21 +1,40 @@
-import { Effect } from "effect";
+import { Data, Effect, Option } from "effect";
+
+interface Session {
+  readonly displayName: string;
+}
+
+class SessionMissing extends Data.TaggedError("SessionMissing") {}
 
 /**
- * The rejection incorrectly throws from Effect.sync. That makes the expected
- * rejection a defect instead of a typed failure that callers can handle with
- * Effect recovery.
+ * requireSession returns the active session or refuses access when it is absent.
+ * The absent branch throws an expected rejection as a defect. sessionMessage
+ * cannot convert that defect into its sign-in prompt through ordinary recovery.
  */
-export const reject = Effect.sync(() => {
-  // throw incorrectly turns this expected rejection into a defect outside ordinary recovery.
-  throw new Error("Rejected");
-});
+export const requireSession = Effect.fn("requireSession")(
+  (session: Option.Option<Session>) =>
+    Option.match(session, {
+      onSome: Effect.succeed,
+      onNone: () =>
+        Effect.sync(() => {
+          // It incorrectly throws the expected SessionMissing rejection as a defect.
+          throw new SessionMissing();
+        }),
+    }),
+);
 
 /**
- * handled cannot recover the expected rejection because reject incorrectly
- * throws it as a defect. Effect.catch never receives that error to select the
- * rejection outcome.
+ * sessionMessage welcomes an active user or asks an unauthenticated user to
+ * sign in. Effect.match handles typed failures, so the thrown rejection prevents
+ * the sign-in prompt from being returned.
  */
-export const handled = reject.pipe(
-  // The throw incorrectly bypasses this caller's ordinary error recovery.
-  Effect.catch(() => Effect.succeed({ rejected: true })),
+export const sessionMessage = Effect.fn("sessionMessage")(
+  (session: Option.Option<Session>) =>
+    requireSession(session).pipe(
+      // It correctly handles typed failures, but the thrown rejection bypasses it.
+      Effect.match({
+        onFailure: () => "Please sign in",
+        onSuccess: ({ displayName }) => `Welcome, ${displayName}`,
+      }),
+    ),
 );

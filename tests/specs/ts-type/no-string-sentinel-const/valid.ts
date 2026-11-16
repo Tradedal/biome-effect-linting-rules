@@ -55,6 +55,7 @@ export const reservationMessage = Effect.fn("reservationMessage")(
     planReservation(input).pipe(
       Effect.map((decision) =>
         Match.value(decision).pipe(
+          // It correctly selects the reservation payload by its tag.
           Match.tag("Reserve", ({ quantity }) => `Reserved ${quantity} items`),
           Match.tag(
             "InsufficientStock",

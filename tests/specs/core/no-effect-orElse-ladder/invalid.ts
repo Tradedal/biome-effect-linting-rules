@@ -17,8 +17,8 @@ export const readCatalogView = Effect.fn("readCatalogView")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
 
-  // The fallback is outside the pipeline whose failures it handles.
   return yield* Effect.catch(
+    // It incorrectly puts the read/decode pipeline inside catch's first argument.
     fs
       .readFileString(filePath)
       .pipe(Effect.flatMap(Schema.decodeUnknownEffect(SavedCatalogView))),

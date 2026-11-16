@@ -1,3 +1,5 @@
+import { Array as Arr, String as Str } from "effect";
+
 const names = [" Mira ", "Owen"];
 
 /**
@@ -5,7 +7,7 @@ const names = [" Mira ", "Owen"];
  * The callback needs no local values or dynamic receiver, so its extra scope
  * adds no work to the name transformation.
  */
-export const trimmed = names.map(function trim(name) {
+export const trimmed = Arr.map(names, function trim(name) {
   // This block incorrectly adds a return-only scope around the name trim.
-  return name.trim();
+  return Str.trim(name);
 });

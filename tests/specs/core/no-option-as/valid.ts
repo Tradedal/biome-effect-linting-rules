@@ -8,10 +8,9 @@ const DownloadAccess = Schema.Struct({
 const DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });
 
 /**
- * The download lookup selects its fixed link in an Option.map callback as
- * the repository convention requires. It constructs the link before the
- * permission lookup in both forms. The callback returns that existing link
- * only for a matching permission; an absent permission still returns None.
+ * resolveDownload returns a link only when the decoded access permits downloads.
+ * Option.liftPredicate applies that permission check to the constructed link.
+ * A missing permission returns None, and malformed access fails decoding.
  */
 export const resolveDownload = Effect.fn("resolveDownload")(function* (
   input: unknown,
@@ -19,11 +18,8 @@ export const resolveDownload = Effect.fn("resolveDownload")(function* (
   const access = yield* Schema.decodeUnknownEffect(DownloadAccess)(input);
   const link = DownloadLink.make({ url: access.downloadUrl });
 
-  return Arr.findFirst(
-    access.permissions,
-    (permission) => permission === "download",
-  ).pipe(
-    // It correctly selects the existing link through a callback.
-    Option.map(() => link),
+  // It correctly retains the link only when the download permission is present.
+  return Option.liftPredicate(link, () =>
+    Arr.contains(access.permissions, "download"),
   );
 });

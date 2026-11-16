@@ -1,5 +1,5 @@
 {
-  "input": "import { type Effect, Ref } from \"effect\";\n\n/**\n * The ReadCount alias incorrectly separates the operation from its Effect\n * channels. The reader must follow another type declaration to inspect a\n * contract that Ref.get already determines.\n */\n// ReadCount incorrectly adds a type lookup for the channels already inferred from Ref.get.\ntype ReadCount = (counter: Ref.Ref<number>) => Effect.Effect<number>;\nexport const readCount: ReadCount = (counter) => Ref.get(counter);\n",
+  "input": "import { type Effect, Ref } from \"effect\";\n\n/**\n * readCount returns the current counter value when its Effect runs.\n * The ReadCount alias separates its channels from the operation that defines\n * them, so the reader must inspect both declarations to follow the contract.\n */\ntype ReadCount =\n  // It incorrectly declares the implemented channels in a separate alias.\n  (counter: Ref.Ref<number>) => Effect.Effect<number>;\nexport const readCount: ReadCount = (counter) => Ref.get(counter);\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/ts-type/no-effect-type-alias/invalid.ts"
           },
           "span": [
-            385,
-            398
+            401,
+            414
           ],
           "sourceCode": null
         },

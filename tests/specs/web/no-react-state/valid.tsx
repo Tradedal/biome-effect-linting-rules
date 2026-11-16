@@ -4,62 +4,56 @@ import { useAtomSuspense } from "@effect/atom-react";
 import { Context, Effect, Layer, Queue, Stream } from "effect";
 import { Atom } from "effect/reactivity";
 
-type Dimension = "innerWidth" | "innerHeight";
+interface Dimensions {
+  readonly width: number;
+  readonly height: number;
+}
 
 class Viewport extends Context.Service<
   Viewport,
-  { readonly dimension: (dimension: Dimension) => Stream.Stream<number> }
+  { readonly dimensions: Stream.Stream<Dimensions> }
 >()("example/Viewport") {
   static readonly layer = Layer.succeed(Viewport, {
-    dimension: (dimension: Dimension) =>
-      Stream.callback<number>((queue) =>
-        Effect.acquireRelease(
-          Effect.sync(() => {
-            const update = () => Queue.offerUnsafe(queue, window[dimension]);
-            window.addEventListener("resize", update);
-            update();
+    dimensions: Stream.callback<Dimensions>((queue) =>
+      Effect.acquireRelease(
+        Effect.sync(() => {
+          const update = () =>
+            Queue.offerUnsafe(queue, {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            });
+          window.addEventListener("resize", update);
+          update();
 
-            return update;
-          }),
-          (update) =>
-            Effect.sync(() => window.removeEventListener("resize", update)),
-        ),
+          return update;
+        }),
+        (update) =>
+          Effect.sync(() => window.removeEventListener("resize", update)),
       ),
+    ),
   });
 }
 
 const viewportRuntime = Atom.runtime(Viewport.layer);
-const viewportDimensionAtom = Atom.family((dimension: Dimension) =>
-  viewportRuntime.atom(
-    Stream.unwrap(
-      Effect.map(Viewport, (viewport) => viewport.dimension(dimension)),
-    ),
+const viewportLabelAtom = viewportRuntime.atom(
+  Stream.unwrap(Effect.map(Viewport, (viewport) => viewport.dimensions)).pipe(
+    Stream.map(({ width, height }) => `${width} × ${height}`),
   ),
 );
 
-const viewportLabelAtom = Atom.make((get) =>
-  Effect.gen(function* () {
-    const width = yield* get.result(viewportDimensionAtom("innerWidth"));
-    const height = yield* get.result(viewportDimensionAtom("innerHeight"));
-
-    return `${width} × ${height}`;
-  }),
-);
-
 /**
- * ViewportSize displays the browser viewport dimensions and updates after
- * a resize. The Viewport service registers listeners and releases them when
- * the atom streams close. A derived atom formats the dimensions as a label,
- * which the component reads through useAtomSuspense. This requires a browser
- * and a surrounding Suspense boundary for the initial stream values.
+ * ViewportSize displays the browser viewport dimensions and updates after a
+ * resize. The Viewport service emits both dimensions through one listener and
+ * removes it when the stream closes. The atom prepares the label before the
+ * component reads it. This requires a browser and a surrounding Suspense
+ * boundary for the initial stream value.
  */
 export function ViewportSize() {
   const outputId = useId();
-  // It correctly reads the completed label from a derived atom.
+  // It correctly reads the prepared viewport label from an atom.
   const label = useAtomSuspense(viewportLabelAtom).value;
 
   return React.createElement("output", { id: outputId }, label);
 }
 
-// It correctly exposes atom hooks to consumers of the viewport module.
 export { useAtomSet, useAtomValue } from "@effect/atom-react";

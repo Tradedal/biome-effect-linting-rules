@@ -46,6 +46,7 @@ export const reservationMessage = Effect.fn("reservationMessage")(
     planReservation(input).pipe(
       Effect.map((decision) =>
         Match.value(decision).pipe(
+          // It correctly checks quantity because the string status cannot narrow the payload.
           Match.when(
             { status: "reserve", quantity: Match.number },
             ({ quantity }) => `Reserved ${quantity} items`,

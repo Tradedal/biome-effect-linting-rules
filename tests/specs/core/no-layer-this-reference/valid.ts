@@ -9,14 +9,13 @@ export class Seed extends Context.Service<Seed, { readonly initial: number }>()(
 export const dependencies = Layer.succeed(Seed, { initial: 3 });
 const makeCounter = Effect.gen(function* () {
   const seed = yield* Seed;
+
   return { read: Effect.succeed(seed.initial) };
 });
 
 /**
- * Counter and its variants expose a read of the configured seed value.
- * Class names identify the service and constructor in each static layer,
- * as the preset requires. ProvidedCounter retains its external factory and
- * supplies the seed dependency, so the configured read still returns 3.
+ * Counter exposes a read of the configured seed value. Its layer names the
+ * service and constructor explicitly, as the preset requires.
  */
 export class Counter extends Context.Service<Counter, CounterApi>()(
   "example/Counter",
@@ -25,20 +24,11 @@ export class Counter extends Context.Service<Counter, CounterApi>()(
   // It correctly names the service and constructor.
   static readonly layer = Layer.effect(Counter, Counter.make);
 }
-export class CounterByMake extends Context.Service<CounterByMake, CounterApi>()(
-  "example/CounterByMake",
-  { make: makeCounter },
-) {
-  // It correctly names the service and constructor.
-  static readonly layer = Layer.effect(CounterByMake, CounterByMake.make);
-}
-export class CounterByKey extends Context.Service<CounterByKey, CounterApi>()(
-  "example/CounterByKey",
-  { make: makeCounter },
-) {
-  // It correctly names the service and constructor.
-  static readonly layer = Layer.effect(CounterByKey, CounterByKey.make);
-}
+
+/**
+ * ProvidedCounter supplies the same seeded read through an external factory.
+ * Its layer must preserve that factory and provide Seed once during assembly.
+ */
 export class ProvidedCounter extends Context.Service<
   ProvidedCounter,
   CounterApi

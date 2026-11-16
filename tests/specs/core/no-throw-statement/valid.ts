@@ -1,19 +1,33 @@
-import { Effect } from "effect";
+import { Data, Effect, type Option } from "effect";
+
+interface Session {
+  readonly displayName: string;
+}
+
+class SessionMissing extends Data.TaggedError("SessionMissing") {}
 
 /**
- * The rejection correctly uses Effect.fail for an expected error. The failure
- * is part of the operation's error channel, where callers can compose their
- * recovery without handling a defect.
+ * requireSession returns the active session or fails with SessionMissing.
+ * Effect.fromOption puts the expected rejection in the error channel, where
+ * sessionMessage can turn it into a sign-in prompt. Defects still propagate.
  */
-// Effect.fail correctly exposes the expected rejection to the caller's recovery.
-export const reject = Effect.fail(new Error("Rejected"));
+export const requireSession = Effect.fn("requireSession")(
+  (session: Option.Option<Session>) =>
+    // It correctly converts an absent session into a typed rejection.
+    Effect.fromOption(() => new SessionMissing())(session),
+);
 
 /**
- * handled correctly recovers the expected rejection with Effect.catch.
- * The expected failure reaches ordinary recovery, which returns an explicit
- * rejection outcome for the caller.
+ * sessionMessage welcomes an active user or asks an unauthenticated user to
+ * sign in. Effect.match selects the display text from success or typed failure.
  */
-export const handled = reject.pipe(
-  // This recovery correctly receives the expected rejection failure.
-  Effect.catch(() => Effect.succeed({ rejected: true })),
+export const sessionMessage = Effect.fn("sessionMessage")(
+  (session: Option.Option<Session>) =>
+    requireSession(session).pipe(
+      // It correctly turns SessionMissing into the sign-in prompt.
+      Effect.match({
+        onFailure: () => "Please sign in",
+        onSuccess: ({ displayName }) => `Welcome, ${displayName}`,
+      }),
+    ),
 );

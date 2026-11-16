@@ -1,5 +1,5 @@
 {
-  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * The generator correctly puts the delivery log before the state update.\n * Separate yields express the required order directly, without a collection\n * of unused action results.\n */\nexport const markDelivered = Effect.fn(\"markDelivered\")(function* (\n  delivered: Ref.Ref<boolean>,\n  recipient: string,\n) {\n  // Separate yields correctly put the delivery log before the state update.\n  yield* Effect.logInfo(`Parcel delivered to ${recipient}`);\n  yield* Ref.set(delivered, true);\n  return yield* Ref.get(delivered);\n});\n",
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * The generator correctly puts the delivery log before the state update.\n * Separate yields express the required order directly, without a collection\n * of unused action results.\n */\nexport const markDelivered = Effect.fn(\"markDelivered\")(function* (\n  delivered: Ref.Ref<boolean>,\n  recipient: string,\n) {\n  yield* Effect.logInfo(`Parcel delivered to ${recipient}`);\n  // It correctly yields the state update separately after the log.\n  yield* Ref.set(delivered, true);\n  return yield* Ref.get(delivered);\n});\n",
   "result": {
     "diagnostics": [],
     "errors": 0,

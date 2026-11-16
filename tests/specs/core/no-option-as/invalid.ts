@@ -8,9 +8,9 @@ const DownloadAccess = Schema.Struct({
 const DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });
 
 /**
- * The download lookup supplies a fixed link to Option.as. The repository
- * convention requires result selection in a callback, which this expression
- * omits.
+ * resolveDownload returns a link only when the decoded access permits downloads.
+ * It finds a permission string just to replace it with the link. The preset
+ * prohibits Option.as; Option.liftPredicate can check access on the link itself.
  */
 export const resolveDownload = Effect.fn("resolveDownload")(function* (
   input: unknown,
@@ -22,7 +22,7 @@ export const resolveDownload = Effect.fn("resolveDownload")(function* (
     access.permissions,
     (permission) => permission === "download",
   ).pipe(
-    // The lookup supplies a fixed link without a result-producing callback.
+    // It incorrectly passes the link directly to Option.as.
     Option.as(link),
   );
 });

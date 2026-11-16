@@ -26,6 +26,7 @@ const RepairDecision = Data.taggedEnum<RepairDecision>();
 export const assessRepair = Effect.fn("assessRepair")(function* (
   input: unknown,
 ) {
+  // It incorrectly asserts RepairQuote without validating input.
   const quote = <RepairQuote>input;
 
   return Match.value(quote.repairCost >= quote.replacementCost).pipe(

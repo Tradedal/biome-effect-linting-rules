@@ -1,15 +1,11 @@
-import { Effect } from "effect";
-
-interface CounterStore {
-  readonly update: () => Effect.Effect<number>;
-}
+import { Effect, Ref } from "effect";
 
 /**
- * The update incorrectly sits inside Effect.sync even though it already
- * returns an Effect. The outer callback constructs the update as its result,
- * adding an unexecuted Effect instead of performing the increment.
+ * increment adds one to the supplied counter. Effect.sync returns the update
+ * Effect as a value, so a caller can run increment without changing the count.
+ * Ref.updateAndGet already supplies the executable update and its new value.
  */
-export const increment = Effect.fn("increment")((store: CounterStore) =>
-  // Effect.sync incorrectly returns store.update's Effect without running it.
-  Effect.sync(() => store.update()),
+export const increment = Effect.fn("increment")((counter: Ref.Ref<number>) =>
+  // It incorrectly wraps Ref.updateAndGet in Effect.sync.
+  Effect.sync(() => Ref.updateAndGet(counter, (count) => count + 1)),
 );

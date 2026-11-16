@@ -23,6 +23,7 @@ const RepairDecision = Data.taggedEnum<RepairDecision>();
 export const assessRepair = Effect.fn("assessRepair")(function* (
   input: unknown,
 ) {
+  // It correctly decodes RepairQuote before the cost comparison.
   const quote = yield* Schema.decodeUnknownEffect(RepairQuote)(input);
 
   return Match.value(quote.repairCost >= quote.replacementCost).pipe(

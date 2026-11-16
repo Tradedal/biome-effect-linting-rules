@@ -1,5 +1,5 @@
 {
-  "input": "import { createHash } from \"node:crypto\";\nimport { readFileSync } from \"node:fs\";\n\n/**\n * fingerprintFile returns a file's content hash so a watcher can compare it\n * with the previous hash to detect a change. The caller receives undefined if\n * the file cannot be read or hashed. This version catches those exceptions\n * with try/catch. The preset requires Result.try for synchronous exceptions\n * so the hash attempt and its fallback form one Result expression.\n */\nexport const fingerprintFile = (file: string): string | undefined => {\n  // It incorrectly handles synchronous exceptions with try/catch.\n  try {\n    return createHash(\"sha256\").update(readFileSync(file)).digest(\"base64url\");\n  } catch {\n    return undefined;\n  }\n};\n",
+  "input": "import { createHash } from \"node:crypto\";\n\nimport { Effect, FileSystem } from \"effect\";\n\n/**\n * fingerprintFile returns a content hash for a watcher to compare with its\n * previous hash. An unreadable file or a hash exception produces undefined.\n * The filesystem service reports read failures through Effect, but the hash\n * callback handles its synchronous exception with a try/catch statement.\n * The preset requires both failures to reach the same Effect recovery.\n */\nexport const fingerprintFile = Effect.fn(\"fingerprintFile\")(function* (\n  file: string,\n) {\n  const fs = yield* FileSystem.FileSystem;\n\n  return yield* fs.readFile(file).pipe(\n    Effect.map((bytes) => {\n      // It incorrectly handles the hash exception with try/catch.\n      try {\n        return createHash(\"sha256\").update(bytes).digest(\"base64url\");\n      } catch {\n        return undefined;\n      }\n    }),\n    Effect.orElseSucceed(() => undefined),\n  );\n});\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/no-try-catch/invalid.ts"
           },
           "span": [
-            608,
-            731
+            750,
+            876
           ],
           "sourceCode": null
         },

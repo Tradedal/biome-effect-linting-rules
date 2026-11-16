@@ -6,7 +6,7 @@ import { Result } from "effect";
  * with construction of the summary.
  */
 export const summarize = (result: Result.Result<number, string>) => ({
-  // The count field mixes value selection with object construction.
+  // It incorrectly selects the count inside the summary object.
   count: Result.match(result, {
     onSuccess: (count) => count,
     onFailure: () => 0,
