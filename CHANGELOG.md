@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1-dev.1](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev...v0.1.1-dev.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* migrate the package to the Tradedal scope ([daf9808](https://github.com/Tradedal/biome-effect-linting-rules/commit/daf9808c726c3be9e6113546207c738311c9c45b))
+
 ## [0.1.1-dev](https://github.com/OperationalFallacy/biome-effect-linting-rules/compare/v0.1.0...v0.1.1-dev) (2026-11-16)
 
 
