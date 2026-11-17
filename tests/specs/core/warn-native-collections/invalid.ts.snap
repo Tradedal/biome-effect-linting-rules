@@ -1,5 +1,5 @@
 {
-  "input": "import * as Value from \"effect/Data\";\n\nclass Cell extends Value.Class<{\n  readonly row: number;\n  readonly column: number;\n}> {}\n\n/**\n * findCell should retrieve the label stored at a coordinate, or undefined\n * when that coordinate is absent. The native Map compares Cell keys by\n * reference. The new key for row 0, column 1 therefore misses occupied even\n * though it represents the stored coordinate.\n */\n// It incorrectly uses reference equality for coordinate keys.\nexport const cells = new Map<Cell, string>([\n  [new Cell({ row: 0, column: 1 }), \"occupied\"],\n]);\n\nexport const findCell = (row: number, column: number) =>\n  cells.get(new Cell({ row, column }));\n",
+  "input": "import { Option } from \"effect\";\nimport * as Value from \"effect/Data\";\n\nclass Cell extends Value.Class<{\n  readonly row: number;\n  readonly column: number;\n}> {}\n\n/**\n * findCell should retrieve the label stored at a coordinate, or None\n * when that coordinate is absent. The native Map compares Cell keys by\n * reference. The new key for row 0, column 1 therefore misses occupied even\n * though it represents the stored coordinate.\n */\nexport const cells =\n  // It incorrectly uses reference equality for coordinate keys.\n  new Map<Cell, string>([[new Cell({ row: 0, column: 1 }), \"occupied\"]]);\n\nexport const findCell = (row: number, column: number) =>\n  Option.fromUndefinedOr(cells.get(new Cell({ row, column })));\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/warn-native-collections/invalid.ts"
           },
           "span": [
-            493,
-            568
+            525,
+            595
           ],
           "sourceCode": null
         },

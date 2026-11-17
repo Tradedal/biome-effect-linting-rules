@@ -12,9 +12,10 @@ interface InvoiceLine {
 export function invoiceTotal(lines: ReadonlyArray<InvoiceLine>) {
   // It incorrectly declares a mutable running total.
   let totalCents = 0;
+
   lines.forEach((line) => {
-    // It incorrectly mutates the total from the callback.
     totalCents += line.quantity * line.unitPriceCents;
   });
+
   return totalCents;
 }

@@ -25,10 +25,10 @@ export const confirmCheckIn = Effect.fn("confirmCheckIn")(function* (
 
   const guest = yield* Schema.decodeUnknownEffect(CheckIn)(input);
 
+  // It correctly yields encoding in the same scope as guest decoding.
   const contents = yield* Schema.encodeEffect(SavedCheckIn)(guest);
 
   yield* fs.writeFileString(confirmationPath, contents);
 
-  // The function returns the receipt only after the file write succeeds.
   return CheckInReceipt.make({ guestId: guest.guestId, confirmationPath });
 });

@@ -44,6 +44,7 @@ export const deliveryMessage = Effect.fn("deliveryMessage")(
     deliverReport(reportId, contents, deliveryDirectory).pipe(
       Effect.map((result) =>
         Match.value(result).pipe(
+          // It correctly reads the delivery path from the tagged result.
           Match.tag(
             "Sent",
             ({ deliveryId }) => `Report written to ${deliveryId}`,
@@ -59,7 +60,6 @@ export const deliveryMessage = Effect.fn("deliveryMessage")(
 );
 
 /** Delivery instructions tell the user to choose a report. */
-// It correctly returns ordinary text without a status diagnostic.
-export const deliveryInstructions = Effect.succeed(
-  "Choose a report to deliver.",
-);
+export const deliveryInstructions =
+  // It correctly returns ordinary text without a status diagnostic.
+  Effect.succeed("Choose a report to deliver.");

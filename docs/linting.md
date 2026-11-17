@@ -34,11 +34,14 @@ Use `Effect.when` for optional Effect work. Its Effect-valued condition runs bef
 import { Effect } from "effect";
 
 interface Writer {
-  readonly write: Effect.Effect<void>;
+  readonly write: Effect.Effect<void, Error>;
 }
 
-export const writeWhen = Effect.fn("writeWhen")((enabled: boolean, writer: Writer) =>
-  writer.write.pipe(Effect.when(Effect.succeed(enabled)), Effect.asVoid),
+/** writeWhen runs the supplied write only when enabled is true. */
+export const writeWhen = Effect.fn("writeWhen")(
+  (enabled: boolean, writer: Writer) =>
+    // It correctly applies the condition to the write Effect.
+    writer.write.pipe(Effect.when(Effect.succeed(enabled)), Effect.asVoid),
 );
 ```
 
@@ -46,11 +49,7 @@ Use `Match` to select pure values and `Effect.when` to select optional Effect wo
 
 ### Dependency assembly
 
-Provide layers at the application or test entry point. A test can supply its own dependencies:
-
-```ts
-it.effect("reads the count", () => readCount.pipe(Effect.provide(counterLayer)));
-```
+Provide layers at the application or test entry point. A test supplies its dependencies with `Effect.provide` around the operation. Provide a stateful service once around the complete sequence when its calls must share the same state.
 
 Inside a service operation, yield its dependencies. Compose their layers once with `Layer.provide` when the service is constructed. Use `Effect.provideService` for dynamic contextual values.
 
@@ -58,11 +57,7 @@ A named constructor supplied to `Layer.effect`, including its curried form, or t
 
 `Effect.when` accepts an Effect-valued condition in v4, in both data-first and curried forms. Both effects may appear inline in the data-first form. Preserve the condition's lazy reads and typed failures. `Effect.acquireRelease` and `Effect.acquireUseRelease` accept acquisition effects directly. Keep `Effect.scoped` around scoped resource operations and preserve their finalizers.
 
-Static service layer declarations must name the class explicitly:
-
-```ts
-static readonly layer = Layer.effect(Counter, Counter.make);
-```
+Static service layer declarations must name the class explicitly, as in `Layer.effect(Counter, Counter.make)`.
 
 Use that form inside dependency-composition pipelines too. If the layer uses an external constructor, preserve that argument and replace the `this` service key with the class name. `no-layer-this-reference` applies only to static layer fields in `Context.Service` classes. Ordinary instance methods are allowed. This is the package's readability convention. Effect supports `Layer.effect(this, this.make)`.
 
@@ -106,7 +101,9 @@ const SupportedFile = Schema.Union([
   }),
 ]);
 
-const decodeSupportedFile = Schema.decodeUnknownEffect(SupportedFile);
+export const decodeSupportedFile =
+  // It correctly derives the decoder from complete allowed field combinations.
+  Schema.decodeUnknownEffect(SupportedFile);
 ```
 
 This schema accepts the two recorded combinations. Separate unions for `kind` and `format` would also admit an image with PDF or a document with PNG. The relation between the fields is part of the contract.

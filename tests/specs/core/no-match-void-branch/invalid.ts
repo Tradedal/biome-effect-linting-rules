@@ -28,7 +28,7 @@ export const removeExpiredSession = Effect.fn("removeExpiredSession")(
 
     const expired = session.expiresAt <= now;
 
-    // The function uses a separate empty branch just to keep a live session.
+    // It incorrectly adds an empty Effect.void branch for a live session.
     yield* Match.value(expired).pipe(
       Match.when(false, () => Effect.void),
       Match.orElse(() => fs.remove(sessionPath)),

@@ -14,23 +14,7 @@ The rules target Effect 4. Version 0.0.9 of `@catenarycloud/linteffect` is the f
 
 You can use the full rule set or choose a smaller preset. Start with a smaller preset to introduce the rules to an established project.
 
-For example, this code uses nested Effect calls to fetch a user and read their profile:
-
-```ts
-const loadUser = Effect.map(
-  Effect.flatMap(getUserId, (userId) => fetchUser(userId)),
-  (user) => user.profile
-);
-```
-
-In a pipeline, the calls appear in the order they run:
-
-```ts
-const loadUser = getUserId.pipe(
-  Effect.flatMap((userId) => fetchUser(userId)),
-  Effect.map((user) => user.profile)
-);
-```
+The [file-read example](https://github.com/Tradedal/biome-effect-linting-rules/blob/dev/tests/specs/core/no-call-tower/invalid.ts) nests a retried read inside its decoder. Its [pipeline correction](https://github.com/Tradedal/biome-effect-linting-rules/blob/dev/tests/specs/core/no-call-tower/valid.ts) puts those steps in execution order. Both return the decoded guest name and retry only the file read.
 
 In this demo, Codex uses the rules to refactor [Messages.ts from the Effect Discord bot](https://github.com/Effect-TS/discord-bot/blob/main/packages/discord/src/Messages.ts).
 

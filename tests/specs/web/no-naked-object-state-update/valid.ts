@@ -4,6 +4,7 @@ const Book = Schema.Struct({ title: Schema.String });
 const CopyHistory = Schema.Struct({ completed: Schema.Int });
 const BookJson = Schema.fromJsonString(Book);
 const encodeBook = Schema.encodeEffect(BookJson);
+const decodeBook = Schema.decodeUnknownEffect(BookJson);
 interface Storage {
   readonly write: (payload: string) => Effect.Effect<void>;
   readonly read: Effect.Effect<string>;
@@ -19,39 +20,29 @@ interface Storage {
  * Struct.evolve and CopyHistory.make perform the state update as the preset
  * requires. A failed read, decode, or write leaves the history unchanged.
  */
-export const copyBook = Effect.fn("copyBook")(
-  (
-    book: typeof Book.Type,
-    storage: Storage,
-    history: Ref.Ref<typeof CopyHistory.Type>,
-  ) =>
-    Effect.gen(function* () {
-      // It correctly encodes the model through its JSON schema.
-      yield* encodeBook(book).pipe(
-        Effect.flatMap((payload) => storage.write(payload)),
-      );
-      const raw = yield* storage.read;
-      const decoded = yield* decodeBook(raw);
-      yield* encodeBook(decoded).pipe(
-        Effect.flatMap((payload) => storage.write(payload)),
-      );
+export const copyBook = Effect.fn("copyBook")(function* (
+  book: typeof Book.Type,
+  storage: Storage,
+  history: Ref.Ref<typeof CopyHistory.Type>,
+) {
+  // It correctly encodes the book with its JSON schema before the write.
+  const original = yield* encodeBook(book);
 
-      // It correctly updates the field and reconstructs copy history.
-      yield* Ref.update(history, (current) =>
-        pipe(
-          current,
-          Struct.evolve({ completed: (count) => count + 1 }),
-          CopyHistory.make,
-        ),
-      );
+  yield* storage.write(original);
 
-      return yield* Ref.get(history);
-    }),
-);
+  const raw = yield* storage.read;
+  const decoded = yield* decodeBook(raw);
+  const copy = yield* encodeBook(decoded);
 
-/**
- * The decoder correctly establishes the whole Book model from serialized input.
- * Parsing and model validation share the same typed failure channel.
- */
-export const decodeBook = Schema.decodeUnknownEffect(BookJson);
-export const decodeCheckedBook = decodeBook;
+  yield* storage.write(copy);
+
+  yield* Ref.update(history, (current) =>
+    pipe(
+      current,
+      Struct.evolve({ completed: (count) => count + 1 }),
+      CopyHistory.make,
+    ),
+  );
+
+  return yield* Ref.get(history);
+});

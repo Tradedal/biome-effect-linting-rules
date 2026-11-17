@@ -29,9 +29,8 @@ export const removeExpiredSession = Effect.fn("removeExpiredSession")(
     const expired = session.expiresAt <= now;
 
     yield* fs.remove(sessionPath).pipe(
-      // Effect.when keeps the file in place for a live session.
+      // It correctly conditions removal with Effect.when.
       Effect.when(Effect.succeed(expired)),
-      Effect.asVoid,
     );
 
     return Match.value(expired).pipe(

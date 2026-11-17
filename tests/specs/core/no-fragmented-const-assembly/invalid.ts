@@ -7,5 +7,6 @@ const errorFields = (cause: Error) => ({ message: cause.message });
  */
 export const response = (cause: Error) => ({
   status: 400,
+  // It incorrectly spreads errorFields into the response body.
   body: { type: "ValidationFailure", ...errorFields(cause) },
 });

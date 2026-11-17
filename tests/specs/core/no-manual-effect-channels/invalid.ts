@@ -1,11 +1,10 @@
-import { type Effect, Ref } from "effect";
+import { Effect, Ref } from "effect";
 
 /**
- * The return annotation incorrectly repeats the Effect type already determined
- * by Ref.get. The body and its handwritten channel declaration become two
- * places to maintain the same operation contract.
+ * readCounter returns the current counter value when its Effect runs.
+ * Its explicit return annotation duplicates the channels determined by Ref.get.
  */
-export function readCounter(counter: Ref.Ref<number>): Effect.Effect<number> {
-  // This handwritten return type incorrectly duplicates Ref.get's inferred channels.
-  return Ref.get(counter);
-}
+export const readCounter = Effect.fn("readCounter")(
+  // It incorrectly annotates channels already inferred from Ref.get.
+  (counter: Ref.Ref<number>): Effect.Effect<number> => Ref.get(counter),
+);

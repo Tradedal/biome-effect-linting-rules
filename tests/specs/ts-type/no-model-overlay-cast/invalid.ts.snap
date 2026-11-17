@@ -1,5 +1,5 @@
 {
-  "input": "import { Data, Effect, Match, Schema } from \"effect\";\n\nconst RepairQuote = Schema.Struct({\n  deviceId: Schema.NonEmptyString,\n  repairCost: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),\n  replacementCost: Schema.Finite.check(Schema.isGreaterThan(0)),\n});\n\ntype RepairQuote = typeof RepairQuote.Type;\n\ntype RepairDecision = Data.TaggedEnum<{\n  ApproveRepair: {\n    readonly deviceId: string;\n    readonly cost: number;\n    readonly savings: number;\n  };\n  ReplaceDevice: { readonly deviceId: string; readonly cost: number };\n}>;\nconst RepairDecision = Data.taggedEnum<RepairDecision>();\n\n/**\n * The repair decision incorrectly treats an assertion as validation of the quote.\n * A string-valued repair cost can enter the comparison and produce an approval\n * with an unusable cost and savings.\n */\nexport const assessRepair = Effect.fn(\"assessRepair\")(function* (\n  input: unknown,\n) {\n  const quote = <RepairQuote>input;\n\n  return Match.value(quote.repairCost >= quote.replacementCost).pipe(\n    Match.when(true, () =>\n      RepairDecision.ReplaceDevice({\n        deviceId: quote.deviceId,\n        cost: quote.replacementCost,\n      }),\n    ),\n    Match.orElse(() =>\n      RepairDecision.ApproveRepair({\n        deviceId: quote.deviceId,\n        cost: quote.repairCost,\n        savings: quote.replacementCost - quote.repairCost,\n      }),\n    ),\n  );\n});\n",
+  "input": "import { Data, Effect, Match, Schema } from \"effect\";\n\nconst RepairQuote = Schema.Struct({\n  deviceId: Schema.NonEmptyString,\n  repairCost: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),\n  replacementCost: Schema.Finite.check(Schema.isGreaterThan(0)),\n});\n\ntype RepairQuote = typeof RepairQuote.Type;\n\ntype RepairDecision = Data.TaggedEnum<{\n  ApproveRepair: {\n    readonly deviceId: string;\n    readonly cost: number;\n    readonly savings: number;\n  };\n  ReplaceDevice: { readonly deviceId: string; readonly cost: number };\n}>;\nconst RepairDecision = Data.taggedEnum<RepairDecision>();\n\n/**\n * The repair decision incorrectly treats an assertion as validation of the quote.\n * A string-valued repair cost can enter the comparison and produce an approval\n * with an unusable cost and savings.\n */\nexport const assessRepair = Effect.fn(\"assessRepair\")(function* (\n  input: unknown,\n) {\n  // It incorrectly asserts RepairQuote without validating input.\n  const quote = <RepairQuote>input;\n\n  return Match.value(quote.repairCost >= quote.replacementCost).pipe(\n    Match.when(true, () =>\n      RepairDecision.ReplaceDevice({\n        deviceId: quote.deviceId,\n        cost: quote.replacementCost,\n      }),\n    ),\n    Match.orElse(() =>\n      RepairDecision.ApproveRepair({\n        deviceId: quote.deviceId,\n        cost: quote.repairCost,\n        savings: quote.replacementCost - quote.repairCost,\n      }),\n    ),\n  );\n});\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/ts-type/no-model-overlay-cast/invalid.ts"
           },
           "span": [
-            909,
-            927
+            975,
+            993
           ],
           "sourceCode": null
         },

@@ -1,5 +1,5 @@
 {
-  "input": "import { Effect } from \"effect\";\n\ninterface CounterStore {\n  readonly update: () => Effect.Effect<number>;\n}\n\n/**\n * The operation correctly returns the store's update Effect directly.\n * There is no synchronous wrapper that turns the update into an unexecuted\n * success value.\n */\nexport const increment = Effect.fn(\"increment\")((store: CounterStore) =>\n  // Returning store.update directly correctly makes the increment executable.\n  store.update(),\n);\n",
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * increment adds one to the supplied counter and returns its new value.\n * Ref.updateAndGet performs the atomic transition when the Effect runs.\n */\nexport const increment = Effect.fn(\"increment\")((counter: Ref.Ref<number>) =>\n  // It correctly returns Ref.updateAndGet directly.\n  Ref.updateAndGet(counter, (count) => count + 1),\n);\n",
   "result": {
     "diagnostics": [],
     "errors": 0,

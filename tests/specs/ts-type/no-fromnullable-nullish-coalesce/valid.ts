@@ -21,7 +21,7 @@ export const prepareInvitation = Effect.fn("prepareInvitation")(function* (
 ) {
   const request = yield* Schema.decodeUnknownEffect(InvitationRequest)(input);
 
-  // The function uses the account email when the request has no recipient.
+  // It correctly passes the recipient directly to Option.fromNullishOr.
   const recipient = yield* Option.fromNullishOr(request.recipient).pipe(
     Option.orElse(() => Option.fromNullishOr(request.accountEmail)),
     Effect.fromOption(

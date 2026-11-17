@@ -1,5 +1,5 @@
 {
-  "input": "import { Array as Arr, Effect, Option, Schema } from \"effect\";\n\nconst DownloadAccess = Schema.Struct({\n  permissions: Schema.Array(Schema.String),\n  downloadUrl: Schema.NonEmptyString,\n});\n\nconst DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });\n\n/**\n * The download lookup supplies a fixed link to Option.as. The repository\n * convention requires result selection in a callback, which this expression\n * omits.\n */\nexport const resolveDownload = Effect.fn(\"resolveDownload\")(function* (\n  input: unknown,\n) {\n  const access = yield* Schema.decodeUnknownEffect(DownloadAccess)(input);\n  const link = DownloadLink.make({ url: access.downloadUrl });\n\n  return Arr.findFirst(\n    access.permissions,\n    (permission) => permission === \"download\",\n  ).pipe(\n    // The lookup supplies a fixed link without a result-producing callback.\n    Option.as(link),\n  );\n});\n",
+  "input": "import { Array as Arr, Effect, Option, Schema } from \"effect\";\n\nconst DownloadAccess = Schema.Struct({\n  permissions: Schema.Array(Schema.String),\n  downloadUrl: Schema.NonEmptyString,\n});\n\nconst DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });\n\n/**\n * resolveDownload returns a link only when the decoded access permits downloads.\n * It finds a permission string just to replace it with the link. The preset\n * prohibits Option.as; Option.liftPredicate can check access on the link itself.\n */\nexport const resolveDownload = Effect.fn(\"resolveDownload\")(function* (\n  input: unknown,\n) {\n  const access = yield* Schema.decodeUnknownEffect(DownloadAccess)(input);\n  const link = DownloadLink.make({ url: access.downloadUrl });\n\n  return Arr.findFirst(\n    access.permissions,\n    (permission) => permission === \"download\",\n  ).pipe(\n    // It incorrectly passes the link directly to Option.as.\n    Option.as(link),\n  );\n});\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/no-option-as/invalid.ts"
           },
           "span": [
-            847,
-            862
+            911,
+            926
           ],
           "sourceCode": null
         },

@@ -1,15 +1,10 @@
-import { Effect } from "effect";
-
-interface CounterStore {
-  readonly update: () => Effect.Effect<number>;
-}
+import { Effect, Ref } from "effect";
 
 /**
- * The operation correctly returns the store's update Effect directly.
- * There is no synchronous wrapper that turns the update into an unexecuted
- * success value.
+ * increment adds one to the supplied counter and returns its new value.
+ * Ref.updateAndGet performs the atomic transition when the Effect runs.
  */
-export const increment = Effect.fn("increment")((store: CounterStore) =>
-  // Returning store.update directly correctly makes the increment executable.
-  store.update(),
+export const increment = Effect.fn("increment")((counter: Ref.Ref<number>) =>
+  // It correctly returns Ref.updateAndGet directly.
+  Ref.updateAndGet(counter, (count) => count + 1),
 );

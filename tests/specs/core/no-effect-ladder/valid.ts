@@ -9,11 +9,11 @@ export const formatLineTotal = Effect.fn("formatLineTotal")(function* (
   quantity: unknown,
   unitPrice: unknown,
 ) {
-  // The pipeline correctly connects decoded quantity and unitPrice to calculation and formatting of their total.
   return yield* Effect.all({
     quantity: Schema.decodeUnknownEffect(Schema.Int)(quantity),
     unitPrice: Schema.decodeUnknownEffect(Schema.Finite)(unitPrice),
   }).pipe(
+    // It correctly applies multiplication as a pipeline step.
     Effect.map((item) => item.quantity * item.unitPrice),
     Effect.map((total) => `$${total.toFixed(2)}`),
   );

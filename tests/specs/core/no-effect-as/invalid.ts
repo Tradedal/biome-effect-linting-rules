@@ -2,12 +2,15 @@ import { Effect } from "effect";
 import { HttpClient } from "effect/http";
 
 /**
- * isListening checks for a running HTTP service.
- * Any response means true, even a 503. A failed request means false.
+ * isListening reports whether the endpoint responds, including with a 503.
+ * The success replacement and false fallback manually implement the predicate
+ * that Effect.isSuccess already provides. Request failures become false;
+ * defects still propagate.
  */
-export const isListening = (endpoint: string) =>
+export const isListening = Effect.fn("isListening")((endpoint: string) =>
   HttpClient.get(`${endpoint}/status`).pipe(
-    // Effect.as passes true directly. The preset requires a function here.
+    // It incorrectly supplies a success flag through Effect.as.
     Effect.as(true),
     Effect.orElseSucceed(() => false),
-  );
+  ),
+);

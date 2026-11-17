@@ -5,17 +5,15 @@ import { style } from "@vanilla-extract/css";
  * names. Consumers can identify each class and its definition without
  * following an alias.
  */
-export const panel = style({ width: "100%" });
+export const panel =
+  // It correctly exports the panel style under one name.
+  style({ width: "100%" });
 export const heading = style({ fontWeight: 600 });
 
 /**
  * The compact class correctly adds its own styles to the panel class.
  * Vanilla Extract generates a new class for that composition.
  */
-export const compactPanel = style([panel, { minWidth: 0 }]);
-
-/**
- * The metadata correctly remains a text value describing the panel.
- * It does not create an additional public name for a generated CSS class.
- */
-export const metadata = "panel";
+export const compactPanel =
+  // It correctly composes a new class with additional styles.
+  style([panel, { minWidth: 0 }]);

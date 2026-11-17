@@ -16,10 +16,11 @@ export function makeCounterApi(counter: Ref.Ref<number>) {
     Effect.map((count) => ({ count })),
   );
   const resetCount = Ref.set(counter, 0);
-  const increment = Effect.fnUntraced(() =>
+  const increment = Effect.fn("Counter.increment")(() =>
     Ref.updateAndGet(counter, (count) => count + 1),
   );
 
+  // It correctly exposes complete operations through the returned API.
   return { readCount, resetCount, increment };
 }
 ```
@@ -35,9 +36,11 @@ import { Effect, Ref } from "effect";
 
 export function makeCounterApi(counter: Ref.Ref<number>) {
   const readCount = Effect.gen(function* () {
+    // It incorrectly stages an intermediate Effect before its yield.
     const snapshot = Ref.get(counter).pipe(
       Effect.map((count) => ({ count })),
     );
+
     return yield* snapshot;
   });
 

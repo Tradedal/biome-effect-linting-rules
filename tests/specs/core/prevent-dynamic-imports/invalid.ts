@@ -9,9 +9,10 @@ import { Effect } from "effect";
  * fixed node:v8 dependency inside the operation. The preset requires a static
  * import so the module dependency is declared before the operation.
  */
-export const encodeState = (value: unknown) =>
+export const encodeState = Effect.fn("encodeState")((value: unknown) =>
   Effect.promise(async () => {
     // It incorrectly loads the fixed node:v8 dependency with a dynamic import.
     const binary = await import("node:v8");
     return Buffer.from(binary.serialize(value)).toString("base64");
-  });
+  }),
+);

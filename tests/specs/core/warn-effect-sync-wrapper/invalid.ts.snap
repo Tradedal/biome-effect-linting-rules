@@ -1,5 +1,5 @@
 {
-  "input": "import { Effect } from \"effect\";\n\ninterface CounterStore {\n  readonly update: () => Effect.Effect<number>;\n}\n\n/**\n * The update incorrectly sits inside Effect.sync even though it already\n * returns an Effect. The outer callback constructs the update as its result,\n * adding an unexecuted Effect instead of performing the increment.\n */\nexport const increment = Effect.fn(\"increment\")((store: CounterStore) =>\n  // Effect.sync incorrectly returns store.update's Effect without running it.\n  Effect.sync(() => store.update()),\n);\n",
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * increment adds one to the supplied counter. Effect.sync returns the update\n * Effect as a value, so a caller can run increment without changing the count.\n * Ref.updateAndGet already supplies the executable update and its new value.\n */\nexport const increment = Effect.fn(\"increment\")((counter: Ref.Ref<number>) =>\n  // It incorrectly wraps Ref.updateAndGet in Effect.sync.\n  Effect.sync(() => Ref.updateAndGet(counter, (count) => count + 1)),\n);\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,8 @@
             "file": "/project/core/warn-effect-sync-wrapper/invalid.ts"
           },
           "span": [
-            491,
-            524
+            422,
+            488
           ],
           "sourceCode": null
         },

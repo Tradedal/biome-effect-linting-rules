@@ -46,11 +46,10 @@ export const updateDigestPreference = Effect.fn("updateDigestPreference")(
 /**
  * preferenceLabel shows whether a typed saved preference has a value. Both
  * true and false count as specified; undefined produces no label. This type
- * check does not coerce unknown input. The label's null fallback belongs to
- * a different operation and must not change the check's diagnostics.
+ * check tests presence in a typed value and does not normalize unknown input.
  */
-// It correctly checks presence without normalizing an unknown flag.
 const isPreferenceSpecified = (enabled: boolean | undefined) =>
+  // It correctly checks presence without normalizing an unknown flag.
   typeof enabled === "boolean";
 
 export const preferenceLabel = (enabled: boolean | undefined) =>

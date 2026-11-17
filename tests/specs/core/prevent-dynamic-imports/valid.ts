@@ -11,8 +11,9 @@ import { Effect } from "effect";
  * the fixed node:v8 dependency before the operation, as the preset requires.
  * Effect.sync still defers serialization until the caller runs the Effect.
  */
-export const encodeState = (value: unknown) =>
+export const encodeState = Effect.fn("encodeState")((value: unknown) =>
   Effect.sync(() => {
     const bytes = serialize(value);
     return Buffer.from(bytes).toString("base64");
-  });
+  }),
+);

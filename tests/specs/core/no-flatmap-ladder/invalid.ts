@@ -23,10 +23,10 @@ export const confirmCheckIn = Effect.fn("confirmCheckIn")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
 
-  // The nested callbacks obscure the order of the check-in steps.
   return yield* Effect.flatMap(
     Schema.decodeUnknownEffect(CheckIn)(input),
     (guest) =>
+      // It incorrectly starts another flatMap inside the guest callback.
       Effect.flatMap(Schema.encodeEffect(SavedCheckIn)(guest), (contents) =>
         Effect.flatMap(fs.writeFileString(confirmationPath, contents), () =>
           Effect.succeed(

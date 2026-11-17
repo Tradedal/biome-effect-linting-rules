@@ -23,11 +23,13 @@ export const readFrame = Effect.fn("readFrame")(function* (
   subscriptionId: string,
   subscription: Subscription,
 ) {
+  // It correctly fails only for completion of the requested subscription.
   yield* Effect.fail(new SubscriptionEnded({ id: subscriptionId })).pipe(
     Effect.when(
       Effect.succeed(frame._tag === "Completed" && frame.id === subscriptionId),
     ),
   );
+
   yield* subscription.acknowledge.pipe(
     Effect.when(
       Effect.succeed(
@@ -35,6 +37,7 @@ export const readFrame = Effect.fn("readFrame")(function* (
       ),
     ),
   );
+
   return Match.value(frame).pipe(
     Match.when({ _tag: "Data", id: subscriptionId }, (data) =>
       Option.some(data.body),

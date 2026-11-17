@@ -1,5 +1,5 @@
 {
-  "input": "const names = [\" Mira \", \"Owen\"];\n\n/**\n * trimmed correctly uses an expression callback for each name's trim.\n * The transformation needs no local declarations or dynamic receiver.\n */\nexport const trimmed = names.map(\n  // The expression correctly states the complete trim without a return-only body.\n  (name) => name.trim(),\n);\n",
+  "input": "import { Array as Arr, String as Str } from \"effect\";\n\nconst names = [\" Mira \", \"Owen\"];\n\n/**\n * trimmed removes surrounding whitespace from each display name. Arr.map\n * accepts Str.trim directly, so each name needs no forwarding callback.\n */\nexport const trimmed = Arr.map(\n  names,\n  // It correctly passes Str.trim directly to Arr.map.\n  Str.trim,\n);\n",
   "result": {
     "diagnostics": [],
     "errors": 0,

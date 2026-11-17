@@ -16,11 +16,11 @@ The same investigation identifies nearby forms the rule must allow. These includ
 
 The author turns the investigated task into independently written examples with generic names and invented data. The author writes new implementations that retain the syntax necessary to test the finding. An example with renamed identifiers still reproduces the source implementation if its code was copied. Published material must exclude identifying records, source-specific comments, and directions for locating nonpublic source.
 
-The invalid example performs the task with the reported pattern. The valid example performs the same task with the correction. Both define the inputs, schemas, and dependencies needed to follow the operation. A dependency whose behavior determines the result cannot be replaced with an unexplained stub, because that would prevent the reviewer from checking whether the pair does the same work.
+The invalid and valid samples perform the same task through the prohibited pattern and its correction. The valid sample follows the repository's composition conventions throughout, including expressions outside the selected matcher. Lint results support this review but cannot establish whether the composition teaches those conventions. Both samples define the inputs, schemas, and dependencies needed to follow the operation. A dependency whose behavior determines the result cannot be replaced with an unexplained stub, because that would prevent the reviewer from checking whether the pair does the same work.
 
 Review starts at the input and follows each operation through its returned value, failure paths, and effects. A syntactic correction must preserve those outcomes and effect order. When the rule fixes a behavioral defect, the explanation instead identifies the intended difference. This comparison is required because two files can compile and satisfy their lint expectations while demonstrating different tasks.
 
-When rewriting an existing pair, the author also checks what its current cases protect. Syntax that previously exposed a false positive or missed finding must remain covered. A more readable replacement cannot discard that coverage simply because the old source was difficult to explain.
+Additional samples demonstrate distinct behavior or syntax that needs separate coverage. Each explanation stays with the case it explains. Repeated implementations and explanations of the same case obscure that distinction. Revisions retain coverage for known false positives and missed findings.
 
 ### Operation documentation
 
@@ -30,11 +30,9 @@ The explanation must distinguish conventions from behavioral defects. For exampl
 
 ### Inline comments
 
-The author places a short comment beside the offending expression and another beside its correction. Each identifies the pattern directly in a complete sentence: "It incorrectly [verb] [pattern description]." or "It correctly [verb] [pattern description]." These markers let the reader locate the demonstrated forms without searching the whole operation.
+Each example code block has exactly one concise inline comment at the expression that demonstrates its violation or correction. The comment sits beside the specific call, argument, annotation, or binding inside the example and states what it does incorrectly or correctly. Its position identifies that syntax within the declaration, including within nested code. The main operation comment supplies the explanation; the inline comment does not repeat it or annotate every occurrence.
 
-The explanation remains in the main comment. "It correctly uses Match.value for conditional value selection." is a sufficient marker when that explanation is already present. A marker that explains the operation again duplicates the main comment. A marker that describes only the task does not identify the pattern.
-
-During prose review, the reviewer reads the main explanation and its marker together, then assesses each against its own purpose. Apply [writing rule 3](unslop.md#content) to both comments: the main comment explains what the operation does and why, while the marker states what the adjacent code does incorrectly or correctly. Do not turn either into a gerund summary. The Humanizer skill and unslop guide do not justify a duplicate explanation in the marker or a marker that merely narrates the task.
+Review composition, distinct coverage, the main explanation, and the inline pointer together for each complete sample. Apply the Humanizer skill and [unslop guide](unslop.md) while preserving these requirements.
 
 ### Code layout
 

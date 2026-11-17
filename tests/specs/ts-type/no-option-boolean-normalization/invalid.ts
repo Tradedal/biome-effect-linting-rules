@@ -30,7 +30,7 @@ export const scheduleReminder = Effect.fn("scheduleReminder")(function* (
 
   const fs = yield* FileSystem.FileSystem;
 
-  // The schema leaves enabled optional, so scheduling supplies the false default.
+  // It incorrectly supplies the enabled default through Option.match.
   const enabled = Option.match(Option.fromNullishOr(request.enabled), {
     onSome: (flag) => flag === true,
     onNone: () => false,
@@ -52,7 +52,6 @@ export const scheduleReminder = Effect.fn("scheduleReminder")(function* (
           { flag: "wx" },
         ),
       ),
-      // A false flag skips directory creation and the notification write.
       Effect.when(Effect.succeed(enabled)),
     );
 

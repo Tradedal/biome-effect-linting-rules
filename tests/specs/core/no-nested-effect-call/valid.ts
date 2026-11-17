@@ -5,17 +5,18 @@ const Configuration = Schema.fromJsonString(
 );
 
 /**
- * The loadEndpoint operation correctly puts the file read and retry before
- * decoding and endpoint selection in the callback's pipeline. The retry
- * applies only to the read before decoding begins.
+ * loadEndpoint reads a configuration file and returns its endpoint. The
+ * generator obtains the filesystem before the read pipeline begins. That
+ * pipeline retries the read twice before decoding, so a malformed configuration
+ * fails without another file read.
  */
-export const loadEndpoint = Effect.fn("loadEndpoint")((path: string) =>
-  Effect.flatMap(FileSystem.FileSystem, (fs) =>
-    // The pipeline correctly limits retry to fs.readFileString before configuration decoding and endpoint selection.
-    fs.readFileString(path).pipe(
-      Effect.retry({ times: 2 }),
-      Effect.flatMap(Schema.decodeUnknownEffect(Configuration)),
-      Effect.map((configuration) => configuration.endpoint),
-    ),
-  ),
-);
+export const loadEndpoint = Effect.fn("loadEndpoint")(function* (path: string) {
+  const fs = yield* FileSystem.FileSystem;
+
+  // It correctly puts retry before decoding and endpoint selection in one pipeline.
+  return yield* fs.readFileString(path).pipe(
+    Effect.retry({ times: 2 }),
+    Effect.flatMap(Schema.decodeUnknownEffect(Configuration)),
+    Effect.map((configuration) => configuration.endpoint),
+  );
+});

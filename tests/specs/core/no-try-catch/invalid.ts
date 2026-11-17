@@ -1,18 +1,28 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+
+import { Effect, FileSystem } from "effect";
 
 /**
- * fingerprintFile returns a file's content hash so a watcher can compare it
- * with the previous hash to detect a change. The caller receives undefined if
- * the file cannot be read or hashed. This version catches those exceptions
- * with try/catch. The preset requires Result.try for synchronous exceptions
- * so the hash attempt and its fallback form one Result expression.
+ * fingerprintFile returns a content hash for a watcher to compare with its
+ * previous hash. An unreadable file or a hash exception produces undefined.
+ * The filesystem service reports read failures through Effect, but the hash
+ * callback handles its synchronous exception with a try/catch statement.
+ * The preset requires both failures to reach the same Effect recovery.
  */
-export const fingerprintFile = (file: string): string | undefined => {
-  // It incorrectly handles synchronous exceptions with try/catch.
-  try {
-    return createHash("sha256").update(readFileSync(file)).digest("base64url");
-  } catch {
-    return undefined;
-  }
-};
+export const fingerprintFile = Effect.fn("fingerprintFile")(function* (
+  file: string,
+) {
+  const fs = yield* FileSystem.FileSystem;
+
+  return yield* fs.readFile(file).pipe(
+    Effect.map((bytes) => {
+      // It incorrectly handles the hash exception with try/catch.
+      try {
+        return createHash("sha256").update(bytes).digest("base64url");
+      } catch {
+        return undefined;
+      }
+    }),
+    Effect.orElseSucceed(() => undefined),
+  );
+});

@@ -6,20 +6,8 @@ import { style } from "@vanilla-extract/css";
  * heading exports expose two public names for the same class.
  */
 const panelBase = style({ width: "100%" });
+// It incorrectly exports panelBase under another name.
 export const panel = panelBase;
 
 export const headingBase = style({ fontWeight: 600 });
 export const heading = headingBase;
-
-/**
- * The compact class correctly composes additional styles with the base class.
- * It produces a new styled class instead of another exported name for the
- * same one.
- */
-export const compactPanel = style([panelBase, { minWidth: 0 }]);
-
-/**
- * The metadata correctly remains a text value describing the panel.
- * It does not create an additional public name for a generated CSS class.
- */
-export const metadata = "panel";

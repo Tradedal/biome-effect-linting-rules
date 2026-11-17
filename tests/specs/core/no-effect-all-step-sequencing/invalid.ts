@@ -9,12 +9,12 @@ export const markDelivered = Effect.fn("markDelivered")(function* (
   delivered: Ref.Ref<boolean>,
   recipient: string,
 ) {
-  // The array incorrectly collects unused log and delivery-update results.
   yield* Effect.all(
     [
       Effect.logInfo(`Parcel delivered to ${recipient}`),
       Ref.set(delivered, true),
     ],
+    // It incorrectly forces sequential execution of the collected actions here.
     { concurrency: 1 },
   );
   return yield* Ref.get(delivered);
