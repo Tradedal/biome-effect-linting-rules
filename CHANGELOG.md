@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1-dev.3](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.2...v0.1.1-dev.3) (2026-11-24)
+
+
+### Bug Fixes
+
+* calibrate React and Effect composition diagnostics ([762942f](https://github.com/Tradedal/biome-effect-linting-rules/commit/762942fb7c434e14b324cbfcc61829a4b8cb444c))
+
 ## [0.1.1-dev.2](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.1...v0.1.1-dev.2) (2026-11-17)
 
 
