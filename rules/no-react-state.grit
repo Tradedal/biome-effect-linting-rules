@@ -1,40 +1,180 @@
 language js(typescript, jsx)
 
-// Reject direct React state and synchronization APIs, including renamed imports
-// and re-exports. Member access must refer to a React default or namespace import.
-or {
-  or {
-    JsShorthandNamedImportSpecifier(local_name=$api),
-    JsNamedImportSpecifier(name=$api)
-  } as $use where {
-    $api <: react_application_api(),
-    $use <: within or {
-      JsImportNamedClause(source=`"react"`),
-      JsImportCombinedClause(source=`"react"`)
+// Biome Grit's file pattern checks the root module before the rule visits
+// references. Only modules that import or re-export React need that scan.
+file(body=react_module())
+
+pattern react_module() {
+  JsModule(items=$items) as $module where {
+    $items <: [..., react_module_item(), ...],
+    $module <: contains bubble or {
+      or {
+        JsShorthandNamedImportSpecifier(local_name=$api),
+        JsNamedImportSpecifier(name=$api)
+      } as $use where {
+        $api <: react_application_api(),
+        $api <: not context_or_ref_api(),
+        $use <: within or {
+          JsImportNamedClause(source=`"react"`),
+          JsImportCombinedClause(source=`"react"`)
+        }
+      },
+      JsExportNamedFromSpecifier(source_name=$use) as $specifier where {
+        $use <: react_application_api(),
+        $specifier <: within JsExportNamedFromClause(source=`"react"`)
+      },
+      or {
+        JsStaticMemberExpression(object=$react, member=$api),
+        JsComputedMemberExpression(object=$react, member=$api) where {
+          $api <: JsStringLiteralExpression()
+        }
+      } as $use where {
+        $api <: react_application_api(),
+        $use <: within JsModule(items=$items),
+        $items <: [
+          ..., JsImport(import_clause=react_import(local=$react)), ...
+        ],
+        $name = text($react),
+        $use <: not within shadows_binding(name=$name),
+        not reads_control_context(use=$use, api=$api)
+      },
+      JsReferenceIdentifier() as $use where {
+        $use <: not within JsExportNamedFromClause(),
+        $use <: within JsModule(items=$items),
+        $name = text($use),
+        $items <: [
+          ...,
+          JsImport(import_clause=react_context_or_ref_import(api=$api, name=$name)),
+          ...
+        ],
+        $use <: not within shadows_binding(name=$name),
+        not reads_control_context(use=$use, api=$api)
+      }
+    } where {
+      register_diagnostic(span=$use, message="Do not manage application values, callback caches, or synchronization through React APIs. State setters, dependency arrays, and effect callbacks make components coordinate application updates. Declare values and transforms as atoms, define transitions and cleanup in Effect services, and use @effect/atom-react for component reads and commands.", severity="error")
     }
-  },
-  JsExportNamedFromSpecifier(source_name=$api) as $use where {
-    $api <: react_application_api(),
-    $use <: within JsExportNamedFromClause(source=`"react"`)
-  },
-  or {
-    JsStaticMemberExpression(object=$react, member=$api),
-    JsComputedMemberExpression(object=$react, member=$api) where {
-      $api <: JsStringLiteralExpression()
-    }
-  } as $use where {
-    $api <: react_application_api(),
-    $use <: within JsModule() as $module,
-    $module <: contains react_import(local=$react)
   }
-} where {
-  register_diagnostic(span=$use, message="Do not manage application values, callback caches, or synchronization through React APIs. State setters, dependency arrays, and effect callbacks make components coordinate application updates. Declare values and transforms as atoms, define transitions and cleanup in Effect services, and use @effect/atom-react for component reads and commands.", severity="error")
 }
 
-// Context, refs, and effects can bypass service operations and atom reads even
-// though React categorizes them separately from state hooks.
+pattern react_module_item() {
+  or {
+    JsImport(import_clause=or {
+      JsImportNamedClause(source=`"react"`),
+      JsImportDefaultClause(source=`"react"`),
+      JsImportNamespaceClause(source=`"react"`),
+      JsImportCombinedClause(source=`"react"`)
+    }),
+    JsExport(export_clause=JsExportNamedFromClause(source=`"react"`))
+  }
+}
+
 pattern react_application_api() {
   r"^['\"]?(?:use(?:State|Reducer|ActionState|Optimistic|Context|Ref|ImperativeHandle|Effect|LayoutEffect|InsertionEffect|EffectEvent|SyncExternalStore|Memo|Callback)?|createContext|createRef)['\"]?$"
+}
+
+// React's use, useContext, useRef, and createContext references describe
+// supported control uses. Report each reference so a local suppression can
+// cover an ambiguous use without also hiding other uses of the same import.
+pattern context_or_ref_api() {
+  r"^(?:use|useContext|useRef|createContext|createRef)$"
+}
+
+// React Aria Components exports these contexts from Dialog and Select for
+// access to library-owned control state. Only a direct read of either imported
+// binding qualifies.
+predicate reads_control_context($use, $api) {
+  $api <: r"^['\"]?use(?:Context)?['\"]?$",
+  $use <: within JsCallExpression(callee=$callee, arguments=JsCallArguments(args=[
+    JsIdentifierExpression(name=$context)
+  ])) as $call where {
+    $callee <: or {
+      $use,
+      JsIdentifierExpression(name=$use)
+    },
+    $name = text($context),
+    $call <: within JsModule(items=$items),
+    $items <: [
+      ..., JsImport(import_clause=control_context_import(name=$name)), ...
+    ],
+    $call <: not within shadows_binding(name=$name)
+  }
+}
+
+pattern control_context_import($name) {
+  or {
+    JsImportNamedClause(source=`"react-aria-components"`, named_specifiers=JsNamedImportSpecifiers(specifiers=$specifiers)),
+    JsImportCombinedClause(source=`"react-aria-components"`, specifier=JsNamedImportSpecifiers(specifiers=$specifiers))
+  } where { $specifiers <: [..., control_context(name=$name), ...] }
+}
+
+pattern control_context($name) {
+  or {
+    JsShorthandNamedImportSpecifier(local_name=$local) where {
+      $local <: r"^(?:OverlayTriggerStateContext|SelectStateContext)$"
+    },
+    JsNamedImportSpecifier(name=r"^(?:OverlayTriggerStateContext|SelectStateContext)$", local_name=$local)
+  } where { $localName = text($local), $localName == $name }
+}
+
+pattern react_context_or_ref_import($api, $name) {
+  or {
+    JsImportNamedClause(source=`"react"`, named_specifiers=JsNamedImportSpecifiers(specifiers=$specifiers)),
+    JsImportCombinedClause(source=`"react"`, specifier=JsNamedImportSpecifiers(specifiers=$specifiers))
+  } where {
+    $specifiers <: [
+      ...,
+      or {
+        JsShorthandNamedImportSpecifier(local_name=$local) where {
+          $api = $local
+        },
+        JsNamedImportSpecifier(name=$api, local_name=$local)
+      } where {
+        $api <: context_or_ref_api(),
+        $localName = text($local),
+        $localName <: $name
+      },
+      ...
+    ]
+  }
+}
+
+// A local parameter or declaration can reuse an import's name. Search each
+// enclosing scope and stop at nested blocks and functions within that scope.
+pattern shadows_binding($name) {
+  or {
+    JsCatchClause(declaration=JsCatchDeclaration(binding=$binding)) where {
+      $binding <: contains binding_named(name=$name)
+    },
+    or {
+      JsArrowFunctionExpression(parameters=$parameters),
+      JsFunctionExpression(parameters=$parameters),
+      JsFunctionDeclaration(parameters=$parameters),
+      JsMethodObjectMember(parameters=$parameters),
+      JsMethodClassMember(parameters=$parameters)
+    } where {
+      $parameters <: contains binding_named(name=$name) until or {
+        JsArrowFunctionExpression(),
+        JsFunctionExpression()
+      }
+    },
+    or {
+      JsFunctionBody(statements=$statements),
+      JsBlockStatement(statements=$statements)
+    } where {
+      $statements <: contains or {
+        JsVariableDeclarator(id=$binding) where {
+          $binding <: contains binding_named(name=$name)
+        },
+        JsFunctionDeclaration(id=binding_named(name=$name)),
+        JsClassDeclaration(id=binding_named(name=$name))
+      } until or {
+        JsFunctionBody(),
+        JsBlockStatement(),
+        JsArrowFunctionExpression(),
+        JsFunctionExpression()
+      }
+    }
+  }
 }
 
 pattern react_import($local) {
@@ -44,5 +184,12 @@ pattern react_import($local) {
     JsImportCombinedClause(source=`"react"`, default_specifier=JsDefaultImportSpecifier(local_name=$local)),
     JsImportCombinedClause(source=`"react"`, specifier=JsNamespaceImportSpecifier(local_name=$local)),
     JsImportNamedClause(source=`"react"`, named_specifiers=contains JsNamedImportSpecifier(name=r"^default$", local_name=$local))
+  }
+}
+
+pattern binding_named($name) {
+  JsIdentifierBinding() as $binding where {
+    $bindingName = text($binding),
+    $bindingName == $name
   }
 }

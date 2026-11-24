@@ -4,6 +4,7 @@ import ReactDefault, {
   useId,
   useLayoutEffect as useSubscription,
   useState as useLocalState,
+  useRef as useValue,
 } from "react";
 
 /**
@@ -49,3 +50,14 @@ export {
   // It incorrectly re-exports a React synchronization API.
   useEffect,
 } from "react";
+
+/**
+ * ReadingModeStatus shows the current reading mode. The component stores the
+ * application setting in a ref. The preset requires an atom for the setting.
+ */
+export function ReadingModeStatus() {
+  // It incorrectly stores the displayed reading mode in a React ref.
+  const mode = useValue("Quiet reading");
+
+  return createElement("output", null, mode.current);
+}

@@ -1,5 +1,5 @@
 {
-  "input": "import { Effect, FileSystem, Match, Schema } from \"effect\";\n\nconst ReportRequest = Schema.Struct({\n  format: Schema.Literals([\"compact\", \"indented\"]),\n  report: Schema.Struct({ title: Schema.NonEmptyString, total: Schema.Finite }),\n});\nconst CompactReport = Schema.fromJsonString(ReportRequest.fields.report);\nconst IndentedReport = Schema.fromJsonString(ReportRequest.fields.report, {\n  space: 2,\n});\nconst ReportReceipt = Schema.Struct({ filePath: Schema.NonEmptyString });\n\n/**\n * exportReport writes a report in the requested JSON format and returns its\n * file path after the write succeeds. Each branch encodes only its own format,\n * but repeats the encoding, write, and receipt sequence. The preset requires\n * the format decision to select an encoder before that shared sequence.\n */\nexport const exportReport = Effect.fn(\"exportReport\")(function* (\n  input: unknown,\n  filePath: string,\n) {\n  const request = yield* Schema.decodeUnknownEffect(ReportRequest)(input);\n  const fs = yield* FileSystem.FileSystem;\n\n  // It incorrectly builds the complete Effect sequence in each format branch.\n  return yield* Match.value(request.format).pipe(\n    Match.when(\"compact\", () =>\n      Schema.encodeEffect(CompactReport)(request.report).pipe(\n        Effect.flatMap((contents) => fs.writeFileString(filePath, contents)),\n        Effect.map(() => ReportReceipt.make({ filePath })),\n      ),\n    ),\n    Match.orElse(() =>\n      Schema.encodeEffect(IndentedReport)(request.report).pipe(\n        Effect.flatMap((contents) => fs.writeFileString(filePath, contents)),\n        Effect.map(() => ReportReceipt.make({ filePath })),\n      ),\n    ),\n  );\n});\n",
+  "input": "import { Effect, FileSystem, Match, Option, Schema } from \"effect\";\n\nconst ReportRequest = Schema.Struct({\n  format: Schema.Literals([\"compact\", \"indented\"]),\n  report: Schema.Struct({ title: Schema.NonEmptyString, total: Schema.Finite }),\n});\nconst CompactReport = Schema.fromJsonString(ReportRequest.fields.report);\nconst IndentedReport = Schema.fromJsonString(ReportRequest.fields.report, {\n  space: 2,\n});\nconst ReportReceipt = Schema.Struct({ filePath: Schema.NonEmptyString });\n\n/**\n * exportReport writes a report in the requested JSON format and returns its\n * file path after the write succeeds. Each branch encodes only its own format,\n * but repeats the encoding, write, and receipt sequence. The preset requires\n * the format decision to select an encoder before that shared sequence.\n */\nexport const exportReport = Effect.fn(\"exportReport\")(function* (\n  input: unknown,\n  filePath: string,\n) {\n  const request = yield* Schema.decodeUnknownEffect(ReportRequest)(input);\n  const fs = yield* FileSystem.FileSystem;\n\n  // It incorrectly builds the complete Effect sequence in each format branch.\n  return yield* Match.value(request.format).pipe(\n    Match.when(\"compact\", () =>\n      Schema.encodeEffect(CompactReport)(request.report).pipe(\n        Effect.flatMap((contents) => fs.writeFileString(filePath, contents)),\n        Effect.map(() => ReportReceipt.make({ filePath })),\n      ),\n    ),\n    Match.orElse(() =>\n      Schema.encodeEffect(IndentedReport)(request.report).pipe(\n        Effect.flatMap((contents) => fs.writeFileString(filePath, contents)),\n        Effect.map(() => ReportReceipt.make({ filePath })),\n      ),\n    ),\n  );\n});\n\n/**\n * resolveValidatedTitle checks an explicit title or reads the title from a book.\n * An open or title validation failure reaches the caller. The preset asks\n * the branch to select the lookup and leave shared sequencing outside it.\n */\nexport function resolveValidatedTitle(\n  title: Option.Option<string>,\n  openBook: () => Effect.Effect<{ readonly title: string }, Error>,\n) {\n  // It incorrectly sequences lookup and validation inside one branch.\n  return Option.match(title, {\n    onNone: () =>\n      openBook().pipe(\n        Effect.flatMap((book) =>\n          Schema.decodeUnknownEffect(Schema.NonEmptyString)(book.title),\n        ),\n      ),\n    onSome: Schema.decodeUnknownEffect(Schema.NonEmptyString),\n  });\n}\n",
   "result": {
     "diagnostics": [
       {
@@ -23,8 +23,37 @@
             "file": "/project/core/no-match-effect-branch/invalid.ts"
           },
           "span": [
-            1115,
-            1642
+            1123,
+            1650
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "information",
+        "description": "Separate value selection from multi-step Effect work in Option.match. Branch-local sequences make the operation's execution order harder to follow. Select the value first, then continue in one Effect pipeline. Short, linear branches with useful local bindings remain valid.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Separate value selection from multi-step Effect work in Option.match. Branch-local sequences make the operation's execution order harder to follow. Select the value first, then continue in one Effect pipeline. Short, linear branches with useful local bindings remain valid."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-match-effect-branch/invalid.ts"
+          },
+          "span": [
+            2120,
+            2376
           ],
           "sourceCode": null
         },
@@ -34,7 +63,7 @@
     ],
     "errors": 1,
     "warnings": 0,
-    "infos": 0,
+    "infos": 1,
     "parseErrors": 0,
     "skippedDiagnostics": 0
   }
