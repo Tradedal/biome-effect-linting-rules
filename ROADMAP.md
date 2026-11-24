@@ -2,7 +2,7 @@
 
 ## Completed matcher batch
 
-All three changes are implemented in this checkout. Package publication is pending.
+All three changes were published in `@tradedal/linteffect@0.1.1-dev.3` under npm's `dev` tag. [Release](https://github.com/Tradedal/biome-effect-linting-rules/releases/tag/v0.1.1-dev.3)
 
 - [x] **React APIs in shared controls.** Allow direct reads of supported React Aria control contexts. Report other context and ref uses individually so a control can suppress its own use while application state from the same import still receives diagnostics. [Consumer guide](docs/linting.md#react-state-and-synchronization)
 - [x] **Evaluated Effect values and complete Layers.** Allow evaluated `Effect.runSync` values and completed Layer pipelines that end in `Layer.unwrap` or `Layer.provideMerge`. Keep diagnostics for intermediate Effect declarations. [Staging rule](rules/no-effect-step-const-staging.grit)
