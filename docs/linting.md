@@ -75,6 +75,8 @@ Use `Record` operations inside `Struct.evolve` for state updates. Reconstruct va
 
 `no-react-state` prohibits React APIs that manage application values, cache callbacks, or synchronize external systems, including `useState`, `useMemo`, `useCallback`, and `useEffect`. These APIs make components coordinate updates through state setters, dependency arrays, and effect callbacks. Declare values and transforms as atoms, where reads establish dependencies. Define transitions and resource cleanup in Effect services. Components read prepared values and invoke commands through `@effect/atom-react`. Keep render free of side effects and keep the adapter's internal React hooks inside the adapter.
 
+Shared controls can read `OverlayTriggerStateContext` and `SelectStateContext` directly from React Aria Components with `use` or `useContext`. The rule reports other context and ref APIs at their use sites because syntax alone cannot tell what their values represent. For presentation context, a DOM ref, or transient gesture data, place `// biome-ignore lint/plugin/no-react-state: <reason>` immediately above the use and explain how the control uses the value. Keep the suppression on that line so application uses of the same import still receive diagnostics.
+
 An atom command that reads state, copies it with object spread, and writes it back spreads a domain transition across separate calls. Give that transition a service operation with an explicit result.
 
 The `Atom` operations `get`, `set`, `update`, `modify`, and `refresh` return Effects. Yield them or compose them directly. Registry instance methods, such as `registry.get` and `registry.set`, execute synchronously. Keep `Effect.sync` around those methods when an Effect must defer their execution.

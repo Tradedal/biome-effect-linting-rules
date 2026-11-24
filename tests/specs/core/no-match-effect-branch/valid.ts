@@ -1,4 +1,5 @@
-import { Effect, FileSystem, Match, Schema } from "effect";
+import { Console, Effect, FileSystem, Match, Option, Schema } from "effect";
+import { Command } from "effect/cli";
 
 const ReportRequest = Schema.Struct({
   format: Schema.Literals(["compact", "indented"]),
@@ -34,3 +35,40 @@ export const exportReport = Effect.fn("exportReport")(function* (
 
   return ReportReceipt.make({ filePath });
 });
+
+/**
+ * selectCommand selects a command definition. The preview command reads and
+ * prints the report only when the CLI invokes its handler.
+ */
+export function selectCommand(preview: boolean) {
+  // It correctly leaves the sequence inside the command handler.
+  return Match.value(preview).pipe(
+    Match.when(true, () =>
+      Command.make("preview", {}, () =>
+        FileSystem.FileSystem.pipe(
+          Effect.flatMap((fs) => fs.readFileString("summary.txt")),
+          Effect.flatMap(Console.log),
+        ),
+      ),
+    ),
+    Match.orElse(() =>
+      Command.make("publish", {}, () => Console.log("Published")),
+    ),
+  );
+}
+
+/**
+ * resolveValidatedTitle checks an explicit title or reads the title from a
+ * book. It validates the chosen title once and passes open or validation
+ * failures to the caller.
+ */
+export function resolveValidatedTitle(
+  title: Option.Option<string>,
+  openBook: () => Effect.Effect<{ readonly title: string }, Error>,
+) {
+  // It correctly validates the selected title after the branch.
+  return Option.match(title, {
+    onNone: () => openBook().pipe(Effect.map((book) => book.title)),
+    onSome: Effect.succeed,
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.NonEmptyString)));
+}

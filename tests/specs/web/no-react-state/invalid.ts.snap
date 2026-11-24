@@ -1,5 +1,5 @@
 {
-  "input": "import * as React from \"react\";\nimport ReactDefault, {\n  createElement,\n  useId,\n  useLayoutEffect as useSubscription,\n  useState as useLocalState,\n} from \"react\";\n\n/**\n * ViewportSize displays the browser viewport dimensions and updates after a\n * resize. React state holds one dimensions value, and one layout effect\n * maintains its listener. These APIs are supported by React. The preset\n * requires service-managed subscriptions and an atom for the prepared label.\n * This component requires a browser.\n */\nexport function ViewportSize() {\n  const outputId = useId();\n  const readDimensions = ReactDefault.useCallback(\n    () => ({\n      width: window.innerWidth,\n      height: window.innerHeight,\n    }),\n    [],\n  );\n  const [dimensions, setDimensions] = useLocalState(readDimensions);\n\n  useSubscription(() => {\n    const update = () => setDimensions(readDimensions());\n    window.addEventListener(\"resize\", update);\n    update();\n\n    return () => window.removeEventListener(\"resize\", update);\n  }, [readDimensions]);\n\n  // It incorrectly caches the display label through React.useMemo.\n  const label = React.useMemo(\n    () => `${dimensions.width} × ${dimensions.height}`,\n    [dimensions],\n  );\n\n  return createElement(\"output\", { id: outputId }, label);\n}\n\n/**\n * The viewport module exposes a React subscription hook to its consumers.\n * The preset requires application consumers to use atom hooks for that work.\n */\nexport {\n  // It incorrectly re-exports a React synchronization API.\n  useEffect,\n} from \"react\";\n",
+  "input": "import * as React from \"react\";\nimport ReactDefault, {\n  createElement,\n  useId,\n  useLayoutEffect as useSubscription,\n  useState as useLocalState,\n  useRef as useValue,\n} from \"react\";\n\n/**\n * ViewportSize displays the browser viewport dimensions and updates after a\n * resize. React state holds one dimensions value, and one layout effect\n * maintains its listener. These APIs are supported by React. The preset\n * requires service-managed subscriptions and an atom for the prepared label.\n * This component requires a browser.\n */\nexport function ViewportSize() {\n  const outputId = useId();\n  const readDimensions = ReactDefault.useCallback(\n    () => ({\n      width: window.innerWidth,\n      height: window.innerHeight,\n    }),\n    [],\n  );\n  const [dimensions, setDimensions] = useLocalState(readDimensions);\n\n  useSubscription(() => {\n    const update = () => setDimensions(readDimensions());\n    window.addEventListener(\"resize\", update);\n    update();\n\n    return () => window.removeEventListener(\"resize\", update);\n  }, [readDimensions]);\n\n  // It incorrectly caches the display label through React.useMemo.\n  const label = React.useMemo(\n    () => `${dimensions.width} × ${dimensions.height}`,\n    [dimensions],\n  );\n\n  return createElement(\"output\", { id: outputId }, label);\n}\n\n/**\n * The viewport module exposes a React subscription hook to its consumers.\n * The preset requires application consumers to use atom hooks for that work.\n */\nexport {\n  // It incorrectly re-exports a React synchronization API.\n  useEffect,\n} from \"react\";\n\n/**\n * ReadingModeStatus shows the current reading mode. The component stores the\n * application setting in a ref. The preset requires an atom for the setting.\n */\nexport function ReadingModeStatus() {\n  // It incorrectly stores the displayed reading mode in a React ref.\n  const mode = useValue(\"Quiet reading\");\n\n  return createElement(\"output\", null, mode.current);\n}\n",
   "result": {
     "diagnostics": [
       {
@@ -81,8 +81,8 @@
             "file": "/project/web/no-react-state/invalid.ts"
           },
           "span": [
-            598,
-            622
+            620,
+            644
           ],
           "sourceCode": null
         },
@@ -110,8 +110,8 @@
             "file": "/project/web/no-react-state/invalid.ts"
           },
           "span": [
-            1112,
-            1125
+            1134,
+            1147
           ],
           "sourceCode": null
         },
@@ -139,8 +139,37 @@
             "file": "/project/web/no-react-state/invalid.ts"
           },
           "span": [
-            1502,
-            1511
+            1524,
+            1533
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "Do not manage application values, callback caches, or synchronization through React APIs. State setters, dependency arrays, and effect callbacks make components coordinate application updates. Declare values and transforms as atoms, define transitions and cleanup in Effect services, and use @effect/atom-react for component reads and commands.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Do not manage application values, callback caches, or synchronization through React APIs. State setters, dependency arrays, and effect callbacks make components coordinate application updates. Declare values and transforms as atoms, define transitions and cleanup in Effect services, and use @effect/atom-react for component reads and commands."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/web/no-react-state/invalid.ts"
+          },
+          "span": [
+            1839,
+            1847
           ],
           "sourceCode": null
         },
@@ -148,7 +177,7 @@
         "source": null
       }
     ],
-    "errors": 5,
+    "errors": 6,
     "warnings": 0,
     "infos": 0,
     "parseErrors": 0,

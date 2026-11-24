@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Match, Schema } from "effect";
+import { Effect, FileSystem, Match, Option, Schema } from "effect";
 
 const ReportRequest = Schema.Struct({
   format: Schema.Literals(["compact", "indented"]),
@@ -39,3 +39,24 @@ export const exportReport = Effect.fn("exportReport")(function* (
     ),
   );
 });
+
+/**
+ * resolveValidatedTitle checks an explicit title or reads the title from a book.
+ * An open or title validation failure reaches the caller. The preset asks
+ * the branch to select the lookup and leave shared sequencing outside it.
+ */
+export function resolveValidatedTitle(
+  title: Option.Option<string>,
+  openBook: () => Effect.Effect<{ readonly title: string }, Error>,
+) {
+  // It incorrectly sequences lookup and validation inside one branch.
+  return Option.match(title, {
+    onNone: () =>
+      openBook().pipe(
+        Effect.flatMap((book) =>
+          Schema.decodeUnknownEffect(Schema.NonEmptyString)(book.title),
+        ),
+      ),
+    onSome: Schema.decodeUnknownEffect(Schema.NonEmptyString),
+  });
+}

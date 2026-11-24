@@ -1,6 +1,6 @@
 import React, { useId } from "react";
 
-import { useAtomSuspense } from "@effect/atom-react";
+import { useAtomSuspense, useAtomValue } from "@effect/atom-react";
 import { Context, Effect, Layer, Queue, Stream } from "effect";
 import { Atom } from "effect/reactivity";
 
@@ -57,3 +57,16 @@ export function ViewportSize() {
 }
 
 export { useAtomSet, useAtomValue } from "@effect/atom-react";
+
+const readingMode = Atom.make("Quiet reading");
+
+/**
+ * ReadingModeStatus shows the current reading mode. The atom supplies the
+ * setting so the status can share it with other controls.
+ */
+export function ReadingModeStatus() {
+  // It correctly reads the displayed reading mode from an atom.
+  const mode = useAtomValue(readingMode);
+
+  return React.createElement("output", null, mode);
+}

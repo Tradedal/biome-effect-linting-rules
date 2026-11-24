@@ -29,8 +29,35 @@ pattern effect_step() {
     $value <: not or {
       `Effect.fn($args)`,
       `Effect.fnUntraced($args)`,
-      `Effect.fnUntracedEager($args)`
+      `Effect.fnUntracedEager($args)`,
+      completed_value()
     }
+  }
+}
+
+// Effect.ts's runSync returns the success value. Layer.ts's unwrap converts
+// an Effect into a Layer, and provideMerge combines service graphs into a
+// Layer. Check the final step so callbacks still get checked independently.
+pattern completed_value() {
+  or {
+    JsCallExpression(callee=`Effect.runSync`),
+    JsCallExpression(callee=`Layer.unwrap`),
+    JsCallExpression(callee=`pipe`, arguments=JsCallArguments(args=[
+      $source, ..., completed_step()
+    ])),
+    JsCallExpression(callee=`$source.pipe`, arguments=JsCallArguments(args=[
+      ..., completed_step()
+    ]))
+  }
+}
+
+pattern completed_step() {
+  or {
+    `Effect.runSync`,
+    `Layer.unwrap`,
+    JsCallExpression(callee=`Layer.provideMerge`, arguments=JsCallArguments(args=[
+      $dependency
+    ]))
   }
 }
 

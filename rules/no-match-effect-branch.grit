@@ -1,87 +1,108 @@
 language js(typescript, jsx)
 
 or {
-  `Match.value($value).pipe($args)` as $matchCall where {
-    or {
-      $args <: contains `Match.when($cond, () => $branch)` where {
-        $branch <: contains `Effect.$fn($_)`,
-        or {
-          $branch <: contains `Effect.flatMap($_)`,
-          $branch <: contains `Effect.map($_)`,
-          $branch <: contains `Effect.andThen($_)`,
-          $branch <: contains `Effect.tap($_)`,
-          $branch <: contains `pipe($_)`,
-          $branch <: contains `Stream.$method($_)`
-        }
-      },
-      $args <: contains `Match.when($cond, () => { $block })` where {
-        $block <: contains `Effect.$fn($_)`,
-        or {
-          $block <: contains `Effect.flatMap($_)`,
-          $block <: contains `Effect.map($_)`,
-          $block <: contains `Effect.andThen($_)`,
-          $block <: contains `Effect.tap($_)`,
-          $block <: contains `pipe($_)`,
-          $block <: contains `Stream.$method($_)`
-        }
-      },
-      $args <: contains `Match.orElse(() => $branch)` where {
-        $branch <: contains `Effect.$fn($_)`,
-        or {
-          $branch <: contains `Effect.flatMap($_)`,
-          $branch <: contains `Effect.map($_)`,
-          $branch <: contains `Effect.andThen($_)`,
-          $branch <: contains `Effect.tap($_)`,
-          $branch <: contains `pipe($_)`,
-          $branch <: contains `Stream.$method($_)`
-        }
-      },
-      $args <: contains `Match.orElse(() => { $block })` where {
-        $block <: contains `Effect.$fn($_)`,
-        or {
-          $block <: contains `Effect.flatMap($_)`,
-          $block <: contains `Effect.map($_)`,
-          $block <: contains `Effect.andThen($_)`,
-          $block <: contains `Effect.tap($_)`,
-          $block <: contains `pipe($_)`,
-          $block <: contains `Stream.$method($_)`
-        }
-      },
-      $args <: contains `Match.when($cond, () => void $branch)` where {
-        $branch <: contains `Effect.$fn($_)`,
-        or {
-          $branch <: contains `Effect.flatMap($_)`,
-          $branch <: contains `Effect.map($_)`,
-          $branch <: contains `Effect.andThen($_)`,
-          $branch <: contains `Effect.tap($_)`,
-          $branch <: contains `pipe($_)`,
-          $branch <: contains `Stream.$method($_)`
-        }
-      },
-      $args <: contains `Match.orElse(() => void $branch)` where {
-        $branch <: contains `Effect.$fn($_)`,
-        or {
-          $branch <: contains `Effect.flatMap($_)`,
-          $branch <: contains `Effect.map($_)`,
-          $branch <: contains `Effect.andThen($_)`,
-          $branch <: contains `Effect.tap($_)`,
-          $branch <: contains `pipe($_)`,
-          $branch <: contains `Stream.$method($_)`
-        }
-      }
-    },
-    register_diagnostic(span=$matchCall, message="Move multi-step Effect sequences out of Match branches. Separate case bodies make the operation's execution order harder to follow. Select the required value with Match, then sequence dependent work in one Effect pipeline. Keep skip decisions explicit. Do not disguise a branch as Option.toArray followed by collection traversal.", severity="error")
+  `Match.value($value).pipe($steps)` as $call where {
+    $steps <: [..., effectful_match_case(), ...],
+    register_diagnostic(span=$call, message="Move multi-step Effect sequences out of Match branches. Separate case bodies make the operation's execution order harder to follow. Select the required value with Match, then sequence dependent work in one Effect pipeline. Keep skip decisions explicit. Do not disguise a branch as Option.toArray followed by collection traversal.", severity="error")
   },
-  `Option.match($value, { $cases })` as $call where {
-    $cases <: contains `Effect.$fn($_)`,
-    or {
-      $cases <: contains `Effect.flatMap($_)`,
-      $cases <: contains `Effect.map($_)`,
-      $cases <: contains `Effect.andThen($_)`,
-      $cases <: contains `Effect.tap($_)`,
-      $cases <: contains `pipe($_)`,
-      $cases <: contains `Stream.$method($_)`
-    },
+  or {
+    `Option.match($value, { $cases })`,
+    `Option.match({ $cases })`
+  } as $call where {
+    $cases <: [..., effectful_option_case(), ...],
     register_diagnostic(span=$call, message="Separate value selection from multi-step Effect work in Option.match. Branch-local sequences make the operation's execution order harder to follow. Select the value first, then continue in one Effect pipeline. Short, linear branches with useful local bindings remain valid.", severity="info")
   }
+}
+
+// Match.ts's when and orElse describe handlers that execute for the selected
+// case. Check those handlers' bodies so work inside a deferred function does
+// not count as work performed by the case.
+pattern effectful_match_case() {
+  or {
+    `Match.when($condition, $handler)`,
+    `Match.orElse($handler)`
+  } where { $handler <: effectful_handler(body=$body) }
+}
+
+// Option.ts's match calls one of onSome and onNone. Check each handler on its
+// own so calls in one case cannot complete a sequence in a sibling case.
+pattern effectful_option_case() {
+  or {
+    JsPropertyObjectMember(name=$name, value=effectful_handler(body=$body)),
+    JsMethodObjectMember(name=$name, body=$body) where {
+      $body <: effect_sequence()
+    }
+  } where {
+    $name <: r"^['\"]?on(?:Some|None)['\"]?$",
+    $body <: not short_projection()
+  }
+}
+
+pattern effectful_handler($body) {
+  or {
+    JsArrowFunctionExpression(body=$body),
+    JsFunctionExpression(body=$body)
+  } where { $body <: effect_sequence() }
+}
+
+pattern effect_sequence() {
+  $body where {
+    $body <: contains JsCallExpression(callee=`Effect.$method`) until nested_function(),
+    $body <: contains or {
+      JsCallExpression(callee=`Effect.$step`) where {
+        $step <: r"^(?:flatMap|map|andThen|tap)$"
+      },
+      JsCallExpression(callee=`pipe`),
+      JsCallExpression(callee=`Stream.$method`)
+    } until nested_function()
+  }
+}
+
+pattern nested_function() {
+  or {
+    JsArrowFunctionExpression(),
+    JsFunctionExpression(),
+    JsFunctionDeclaration(),
+    JsMethodObjectMember(),
+    JsMethodClassMember()
+  }
+}
+
+// Effect.ts's map transforms a success without sequencing another Effect.
+// A single map that reads a property leaves the branch as one lookup.
+pattern short_projection() {
+  or {
+    property_projection_call(),
+    JsFunctionBody(statements=[
+      JsReturnStatement(argument=property_projection_call())
+    ])
+  }
+}
+
+pattern property_projection_call() {
+  or {
+    JsCallExpression(callee=`$lookup.pipe`, arguments=JsCallArguments(args=[
+      JsCallExpression(callee=`Effect.map`, arguments=JsCallArguments(args=[
+        property_projection()
+      ])),
+    ])),
+    JsCallExpression(callee=`Effect.map`, arguments=JsCallArguments(args=[
+      $lookup, property_projection()
+    ]))
+  } where { $lookup <: JsCallExpression(), $lookup <: not effect_sequence() }
+}
+
+pattern property_projection() {
+  JsArrowFunctionExpression(parameters=$parameters, body=JsStaticMemberExpression(object=$record)) where {
+    $parameters <: or {
+      projection_parameter(record=$record),
+      JsParameters(items=[
+        JsFormalParameter(binding=projection_parameter(record=$record))
+      ])
+    }
+  }
+}
+
+pattern projection_parameter($record) {
+  JsIdentifierBinding() as $parameter where { $parameter <: $record }
 }
