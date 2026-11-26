@@ -510,7 +510,6 @@ jobs:
   const devReleasePleaseConfig = {
     $schema:
       "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-    "last-release-sha": "b5a3ad1c57bc6dfdd2c9f24646c4c0d69e1d0f5e",
     packages: {
       ".": {
         "bump-patch-for-minor-pre-major": true,
