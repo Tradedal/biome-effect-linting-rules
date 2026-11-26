@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1-dev.5](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.4...v0.1.1-dev.5) (2026-11-26)
+
+
+### Bug Fixes
+
+* detect generic channel forwarding wrappers ([0127008](https://github.com/Tradedal/biome-effect-linting-rules/commit/0127008dcabdf294ed77061bbaa722da5977d921))
+
 ## [0.1.1-dev.4](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.3...v0.1.1-dev.4) (2026-11-26)
 
 
