@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2-dev.1](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.2-dev...v0.1.2-dev.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* declare the Biome version required by presets ([e01df6b](https://github.com/Tradedal/biome-effect-linting-rules/commit/e01df6b7267c2762ce56f5da98e775c7a37889dc))
+
 ## [0.1.2-dev](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1...v0.1.2-dev) (2026-11-26)
 
 This prerelease includes the [generic channel-forwarding fix](https://github.com/Tradedal/biome-effect-linting-rules/commit/0127008dcabdf294ed77061bbaa722da5977d921) and [dependency upgrades](https://github.com/Tradedal/biome-effect-linting-rules/commit/0b25925a6cbef9d4e796cd4522730fc14b3a0f44) from the deprecated `0.1.1-dev.5` release. Biome is at 2.6.9, Effect at 4.1.6, and the build uses TypeScript 6.0.3.
