@@ -82,7 +82,9 @@ The installed stable release is locked in `yarn.lock`. Update it with `yarn up -
 
 ## Releases
 
-The release workflow uses Release Please on `master` for stable releases and `dev` for prereleases. Stable packages use npm's `latest` tag; prereleases use `dev`. npm publication uses GitHub OIDC trusted publishing. Change generated release workflow behavior in `.projenrc.ts`.
+Release Please proposes stable releases on `master` for npm's `latest` tag and prereleases on `dev` for npm's `dev` tag. The release workflow publishes through GitHub OIDC. Change generated workflow behavior in `.projenrc.ts`.
+
+Let Release Please choose the version without a `Release-As` override. Before merging a prerelease PR, verify that its base version is higher than npm's current `latest`.
 
 ## Test label standard
 
