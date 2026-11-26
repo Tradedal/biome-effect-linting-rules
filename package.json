@@ -58,6 +58,14 @@
     "vite": "^8",
     "vitest": "^5.0.5"
   },
+  "peerDependencies": {
+    "@biomejs/biome": "2.6.9"
+  },
+  "peerDependenciesMeta": {
+    "@biomejs/biome": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@biomejs/wasm-nodejs": "2.6.9",
     "@effect/platform-node-shared": "4.1.6",

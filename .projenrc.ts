@@ -55,7 +55,6 @@ const synthesize = Effect.fn("synthesize")(function* () {
       "effect@4.1.6",
     ],
     devDeps: [
-      "@biomejs/biome@2.6.9",
       "@tradedal/linteffect@npm:latest",
       "@effect/atom-react@4.1.6",
       "@effect/language-service@0.87.5",
@@ -91,6 +90,10 @@ const synthesize = Effect.fn("synthesize")(function* () {
     npmDistTag: "latest",
     packageManager: javascript.NodePackageManager.YARN_BERRY,
     packageName: "@tradedal/linteffect",
+    peerDeps: ["@biomejs/biome@2.6.9"],
+    peerDependenciesMeta: {
+      "@biomejs/biome": { optional: true },
+    },
     prettier: false,
     projenVersion: "^0.105.13",
     releaseToNpm: true,

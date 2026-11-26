@@ -70,7 +70,13 @@ Create a `biome.json` or `biome.jsonc` with the core preset in `extends`. If you
 }
 ```
 
-The presets use Biome 2.6.9's configuration schema. The standalone CLI bundles the matching WebAssembly engine.
+The presets use Biome 2.6.9's configuration schema and declare that version as a peer dependency. Package managers report a mismatch when a project uses another Biome version. The peer dependency is optional because the standalone CLI bundles the matching WebAssembly engine and works without a native Biome installation.
+
+When upgrading to the current prerelease, update Biome and the rules together:
+
+```bash
+yarn add -D @biomejs/biome@2.6.9 @tradedal/linteffect@dev
+```
 
 With Yarn Berry, set `nodeLinker: node-modules` so Biome can find the rules in `node_modules`.
 

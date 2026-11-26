@@ -379,7 +379,6 @@
             "yarn",
             "up",
             "-R",
-            "@biomejs/biome",
             "@effect/atom-react",
             "@effect/language-service",
             "@tradedal/linteffect",
@@ -396,6 +395,7 @@
             "typescript",
             "vite",
             "vitest",
+            "@biomejs/biome",
             "@biomejs/wasm-nodejs",
             "@effect/platform-node-shared",
             "effect"
