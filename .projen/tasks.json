@@ -391,6 +391,7 @@
             "projen",
             "react",
             "scheduler",
+            "semver",
             "tsx",
             "typescript",
             "vite",

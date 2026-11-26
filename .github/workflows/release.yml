@@ -100,6 +100,8 @@ jobs:
             *-dev*) ;;
             *) echo "Skipping non-dev version $PACKAGE_VERSION"; exit 0 ;;
           esac
+          LATEST_VERSION=$(npm view "$PACKAGE_NAME@latest" version)
+          yarn exec semver "$PACKAGE_VERSION" --range ">$LATEST_VERSION" --include-prerelease
           if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version >/dev/null 2>&1; then
             echo "$PACKAGE_NAME@$PACKAGE_VERSION is already published"
             exit 0

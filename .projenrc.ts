@@ -64,6 +64,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
       "@vanilla-extract/css@1.21.3",
       "react@19.3.1",
       "scheduler@0.28.0",
+      "semver@^7.8.6",
       "tsx@^4.20.6",
       "typescript@^6.0.3",
       "vite@^8",
@@ -492,6 +493,8 @@ jobs:
             *-dev*) ;;
             *) echo "Skipping non-dev version $PACKAGE_VERSION"; exit 0 ;;
           esac
+          LATEST_VERSION=$(npm view "$PACKAGE_NAME@latest" version)
+          yarn exec semver "$PACKAGE_VERSION" --range ">$LATEST_VERSION" --include-prerelease
           if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version >/dev/null 2>&1; then
             echo "$PACKAGE_NAME@$PACKAGE_VERSION is already published"
             exit 0
@@ -507,6 +510,7 @@ jobs:
   const devReleasePleaseConfig = {
     $schema:
       "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "last-release-sha": "b5a3ad1c57bc6dfdd2c9f24646c4c0d69e1d0f5e",
     packages: {
       ".": {
         "bump-patch-for-minor-pre-major": true,
