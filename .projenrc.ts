@@ -467,7 +467,7 @@ jobs:
       id-token: write
     env:
       CI: "true"
-    if: github.ref_name == 'dev'
+    if: \${{ github.ref_name == 'dev' && needs.release_please_dev.outputs.release_created == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
