@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2-dev](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1...v0.1.2-dev) (2026-11-26)
+
+
+### Bug Fixes
+
+* recover dev releases from the published stable baseline ([b4e4036](https://github.com/Tradedal/biome-effect-linting-rules/commit/b4e403659716e86d51704069c733732da4c4e4f0))
+
 ## [0.1.1-dev.5](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.4...v0.1.1-dev.5) (2026-11-26)
 
 
