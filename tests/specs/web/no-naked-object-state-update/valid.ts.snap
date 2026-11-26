@@ -1,0 +1,11 @@
+{
+  "input": "import { Effect, pipe, Ref, Schema, Struct } from \"effect\";\n\nconst Book = Schema.Struct({ title: Schema.String });\nconst CopyHistory = Schema.Struct({ completed: Schema.Int });\nconst BookJson = Schema.fromJsonString(Book);\nconst encodeBook = Schema.encodeEffect(BookJson);\nconst decodeBook = Schema.decodeUnknownEffect(BookJson);\ninterface Storage {\n  readonly write: (payload: string) => Effect.Effect<void>;\n  readonly read: Effect.Effect<string>;\n}\n\n/**\n * copyBook writes the supplied book, reads a stored payload, and copies that\n * payload back. The Book JSON schema checks externally edited data before\n * the second write and copies only Book fields. Malformed books now fail\n * through the decoding channel. Valid books retain the same write, read,\n * and write sequence.\n * A successful copy increments the completed count and returns that history.\n * Struct.evolve and CopyHistory.make perform the state update as the preset\n * requires. A failed read, decode, or write leaves the history unchanged.\n */\nexport const copyBook = Effect.fn(\"copyBook\")(function* (\n  book: typeof Book.Type,\n  storage: Storage,\n  history: Ref.Ref<typeof CopyHistory.Type>,\n) {\n  // It correctly encodes the book with its JSON schema before the write.\n  const original = yield* encodeBook(book);\n\n  yield* storage.write(original);\n\n  const raw = yield* storage.read;\n  const decoded = yield* decodeBook(raw);\n  const copy = yield* encodeBook(decoded);\n\n  yield* storage.write(copy);\n\n  yield* Ref.update(history, (current) =>\n    pipe(\n      current,\n      Struct.evolve({ completed: (count) => count + 1 }),\n      CopyHistory.make,\n    ),\n  );\n\n  return yield* Ref.get(history);\n});\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

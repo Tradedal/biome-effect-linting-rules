@@ -1,0 +1,41 @@
+{
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * increment adds one to the supplied counter. Effect.sync returns the update\n * Effect as a value, so a caller can run increment without changing the count.\n * Ref.updateAndGet already supplies the executable update and its new value.\n */\nexport const increment = Effect.fn(\"increment\")((counter: Ref.Ref<number>) =>\n  // It incorrectly wraps Ref.updateAndGet in Effect.sync.\n  Effect.sync(() => Ref.updateAndGet(counter, (count) => count + 1)),\n);\n",
+  "result": {
+    "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "warning",
+        "description": "Review the call returned by this Effect.sync callback. If it returns an Effect, return or yield that Effect directly; Effect.sync otherwise succeeds with the unexecuted Effect as its value. Keep native operations deferred and give them an explicit pipeline step.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Review the call returned by this Effect.sync callback. If it returns an Effect, return or yield that Effect directly; Effect.sync otherwise succeeds with the unexecuted Effect as its value. Keep native operations deferred and give them an explicit pipeline step."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/warn-effect-sync-wrapper/invalid.ts"
+          },
+          "span": [
+            422,
+            488
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      }
+    ],
+    "errors": 0,
+    "warnings": 1,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

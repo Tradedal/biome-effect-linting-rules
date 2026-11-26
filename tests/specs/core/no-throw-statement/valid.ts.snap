@@ -1,0 +1,11 @@
+{
+  "input": "import { Data, Effect, type Option } from \"effect\";\n\ninterface Session {\n  readonly displayName: string;\n}\n\nclass SessionMissing extends Data.TaggedError(\"SessionMissing\") {}\n\n/**\n * requireSession returns the active session or fails with SessionMissing.\n * Effect.fromOption puts the expected rejection in the error channel, where\n * sessionMessage can turn it into a sign-in prompt. Defects still propagate.\n */\nexport const requireSession = Effect.fn(\"requireSession\")(\n  (session: Option.Option<Session>) =>\n    // It correctly converts an absent session into a typed rejection.\n    Effect.fromOption(() => new SessionMissing())(session),\n);\n\n/**\n * sessionMessage welcomes an active user or asks an unauthenticated user to\n * sign in. Effect.match selects the display text from success or typed failure.\n */\nexport const sessionMessage = Effect.fn(\"sessionMessage\")(\n  (session: Option.Option<Session>) =>\n    requireSession(session).pipe(\n      // It correctly turns SessionMissing into the sign-in prompt.\n      Effect.match({\n        onFailure: () => \"Please sign in\",\n        onSuccess: ({ displayName }) => `Welcome, ${displayName}`,\n      }),\n    ),\n);\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

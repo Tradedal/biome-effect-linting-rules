@@ -1,9 +1,18 @@
-import { Array as Arr, Effect, FileSystem, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Match,
+  Option,
+  Schema,
+} from "effect";
 import { JsonFile, JsonPatch, javascript, ReleasableCommits } from "projen";
 import { YarnNodeLinker } from "projen/lib/javascript";
 import { ReleaseTrigger } from "projen/lib/release";
 
 import { NodeFileSystem } from "@effect/platform-node-shared";
+
+import { builtinLinter } from "./src/biome";
 
 const synthesize = Effect.fn("synthesize")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -41,16 +50,21 @@ const synthesize = Effect.fn("synthesize")(function* () {
     description:
       "Biome Grit rules for declarative Effect TypeScript composition and repository-wide style consistency.",
     deps: [
-      "@biomejs/wasm-nodejs@2.6.3",
+      "@biomejs/wasm-nodejs@2.6.6",
       "@effect/platform-node-shared@4.1.0",
       "effect@4.1.0",
     ],
     devDeps: [
-      "@biomejs/biome@2.6.3",
-      "@catenarycloud/linteffect@dev",
+      "@biomejs/biome@2.6.6",
+      "@catenarycloud/linteffect@latest",
+      "@effect/atom-react@4.1.0",
       "@effect/language-service@0.87.5",
       "@types/node@^24",
+      "@types/react@19.3.0",
+      "@vanilla-extract/css@1.21.3",
       "projen@^0.98.34",
+      "react@19.2.9",
+      "scheduler@0.28.0",
       "tsx@^4.20.6",
       "typescript@^5.9.3",
       "vite@^8",
@@ -76,14 +90,13 @@ const synthesize = Effect.fn("synthesize")(function* () {
     npmAccess: javascript.NpmAccess.PUBLIC,
     npmDistTag: "latest",
     packageManager: javascript.NodePackageManager.YARN_BERRY,
-    packageName: "@catenarycloud/linteffect",
+    packageName: "@tradedal/linteffect",
     prettier: false,
     releaseToNpm: true,
     release: true,
     releaseTrigger: ReleaseTrigger.workflowDispatch(),
     releasableCommits: ReleasableCommits.featuresAndFixes(),
-    repository:
-      "https://github.com/OperationalFallacy/biome-effect-linting-rules.git",
+    repository: "https://github.com/Tradedal/biome-effect-linting-rules.git",
     workflowNodeVersion: "24.11.1",
     workflowBootstrapSteps: [
       {
@@ -129,7 +142,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
 
   project.package.addField("repository", {
     type: "git",
-    url: "https://github.com/OperationalFallacy/biome-effect-linting-rules.git",
+    url: "https://github.com/Tradedal/biome-effect-linting-rules.git",
   });
 
   project.package.addField("exports", {
@@ -165,7 +178,28 @@ const synthesize = Effect.fn("synthesize")(function* () {
     steps: [
       { exec: "effect-language-service patch" },
       { exec: "tsc --project tsconfig.json" },
+      { spawn: "typecheck:fixtures" },
     ],
+  });
+  project.addTask("typecheck:fixtures", {
+    exec: "tsc --project tsconfig.fixtures.json",
+  });
+  new JsonFile(project, "tsconfig.fixtures.json", {
+    marker: false,
+    obj: {
+      extends: "./tsconfig.json",
+      compilerOptions: {
+        plugins: [],
+        jsx: "preserve",
+        resolveJsonModule: true,
+        moduleDetection: "force",
+      },
+      include: [
+        "tests/specs/**/*.ts",
+        "tests/specs/**/*.tsx",
+        "tests/composition/**/*.ts",
+      ],
+    },
   });
   project.addTask("effect:diagnostics", {
     exec: "effect-language-service diagnostics --project tsconfig.json",
@@ -182,6 +216,9 @@ const synthesize = Effect.fn("synthesize")(function* () {
   project.addTask("lint:local", {
     exec: "biome check --config-path=biome.local.jsonc",
     receiveArgs: true,
+  });
+  project.addTask("format", {
+    exec: "biome format --config-path=biome.base.jsonc --write .projenrc.ts bin scripts src rules configs examples tests vitest.config.mts",
   });
 
   new JsonFile(project, "biome.base.jsonc", {
@@ -228,8 +265,14 @@ const synthesize = Effect.fn("synthesize")(function* () {
           "bin/**",
           "scripts/**",
           "src/**",
+          "rules/*.grit",
+          "configs/*.jsonc",
+          "examples/*.jsonc",
           "tests/**/*.test.ts",
           "tests/support/**",
+          "tests/specs/**/*.ts",
+          "tests/specs/**/*.tsx",
+          "tests/composition/**/*.ts",
           "vitest.config.mts",
           "!!refs",
           "!!.local",
@@ -237,14 +280,14 @@ const synthesize = Effect.fn("synthesize")(function* () {
           "!!lib",
         ],
       },
-      linter: {
-        enabled: true,
-        rules: {
-          preset: "recommended",
-          style: { useConst: "error" },
-          complexity: { useArrowFunction: "off" },
+      linter: builtinLinter,
+      overrides: [
+        {
+          includes: ["tests/specs/**", "tests/composition/**"],
+          linter: { enabled: false },
+          assist: { enabled: false },
         },
-      },
+      ],
       vcs: { clientKind: "git", enabled: true, useIgnoreFile: true },
     },
   });
@@ -270,17 +313,31 @@ const synthesize = Effect.fn("synthesize")(function* () {
       root: true,
       extends: ["./biome.base.jsonc"],
       plugins: preset.plugins.map((plugin) =>
-        plugin.replace("./node_modules/@catenarycloud/linteffect/", "./"),
+        plugin.replace("./node_modules/@tradedal/linteffect/", "./"),
       ),
     },
   });
   project.compileTask.exec("effect-language-service patch");
   project.compileTask.exec("tsc --project tsconfig.build.json");
   project.testTask.reset();
-  project.testTask.spawn(project.compileTask);
   project.testTask.exec("yarn lint");
+  project.testTask.spawn(project.compileTask);
   project.testTask.exec("vitest run");
   project.testTask.exec("yarn typecheck");
+  project.addTask("test:update", {
+    steps: [
+      { spawn: "format" },
+      ...Arr.map(project.testTask.steps, (step) =>
+        Match.value(step.exec).pipe(
+          Match.when("vitest run", () => ({
+            ...step,
+            exec: "vitest run --update",
+          })),
+          Match.orElse(() => step),
+        ),
+      ),
+    ],
+  });
 
   project.defaultTask?.reset("tsx .projenrc.ts");
 
@@ -476,7 +533,7 @@ jobs:
         "bump-patch-for-minor-pre-major": true,
         "changelog-path": "CHANGELOG.md",
         "include-component-in-tag": false,
-        "package-name": "@catenarycloud/linteffect",
+        "package-name": "@tradedal/linteffect",
         prerelease: true,
         "prerelease-type": "dev",
         "release-type": "node",

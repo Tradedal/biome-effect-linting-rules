@@ -41,7 +41,7 @@ const DocumentedSource = Schema.String.check(
  * Discovery checks preset registration; loading reads the selected source and rule.
  */
 export class FixtureRepository extends Context.Service<FixtureRepository>()(
-  "@catenarycloud/linteffect/tests/support/fixtureRepository",
+  "@tradedal/linteffect/tests/support/fixtureRepository",
   {
     make: Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -91,7 +91,7 @@ export class FixtureRepository extends Context.Service<FixtureRepository>()(
 
           yield* Effect.forEach(fixtures, (fixture) =>
             Schema.decodeUnknownEffect(Schema.Literals(presets[fixture.group]))(
-              `./node_modules/@catenarycloud/linteffect/rules/${fixture.rule}.grit`,
+              `./node_modules/@tradedal/linteffect/rules/${fixture.rule}.grit`,
             ).pipe(
               Effect.andThen(
                 fs.access(

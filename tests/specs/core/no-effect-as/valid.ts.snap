@@ -1,0 +1,11 @@
+{
+  "input": "import { Effect } from \"effect\";\nimport { HttpClient } from \"effect/http\";\n\n/**\n * isListening reports whether the endpoint responds, including with a 503.\n * Effect.isSuccess returns false for a request failure and preserves defects.\n */\nexport const isListening = Effect.fn(\"isListening\")((endpoint: string) =>\n  HttpClient.get(`${endpoint}/status`).pipe(\n    // It correctly uses Effect.isSuccess to report whether the request succeeds.\n    Effect.isSuccess,\n  ),\n);\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

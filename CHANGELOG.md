@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.1.1-dev.4](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.3...v0.1.1-dev.4) (2026-11-26)
+
+
+### Miscellaneous Chores
+
+* prepare next dev release ([bfc93aa](https://github.com/Tradedal/biome-effect-linting-rules/commit/bfc93aab42473b86881a7bd56cc5aed3559e4a2a))
+
+## [0.1.1-dev.3](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.2...v0.1.1-dev.3) (2026-11-24)
+
+
+### Bug Fixes
+
+* calibrate React and Effect composition diagnostics ([762942f](https://github.com/Tradedal/biome-effect-linting-rules/commit/762942fb7c434e14b324cbfcc61829a4b8cb444c))
+
+## [0.1.1-dev.2](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.1...v0.1.1-dev.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* clean up Effect rule learning examples ([5e4d1e0](https://github.com/Tradedal/biome-effect-linting-rules/commit/5e4d1e049b2032cea36d8d72dbb9f4c79a917a95))
+
+## [0.1.1-dev.1](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev...v0.1.1-dev.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* migrate the package to the Tradedal scope ([daf9808](https://github.com/Tradedal/biome-effect-linting-rules/commit/daf9808c726c3be9e6113546207c738311c9c45b))
+
+## [0.1.1-dev](https://github.com/OperationalFallacy/biome-effect-linting-rules/compare/v0.1.0...v0.1.1-dev) (2026-11-16)
+
+
+### Bug Fixes
+
+* calibrate Effect rules and complete learning examples ([9f2ad0c](https://github.com/OperationalFallacy/biome-effect-linting-rules/commit/9f2ad0ce65db0e70ab7452d0c2496e028d0e4911))
+
 ## [0.1.0](https://github.com/OperationalFallacy/biome-effect-linting-rules/compare/v0.0.9...v0.1.0) (2026-11-01)
 
 This release targets Effect 4. Version 0.0.9 is the final Effect v3 release.

@@ -1,0 +1,11 @@
+{
+  "input": "import { Effect, FileSystem, Schema } from \"effect\";\n\nconst Configuration = Schema.fromJsonString(\n  Schema.Struct({ endpoint: Schema.NonEmptyString }),\n);\n\n/**\n * loadEndpoint reads a configuration file and returns its endpoint. The\n * generator obtains the filesystem before the read pipeline begins. That\n * pipeline retries the read twice before decoding, so a malformed configuration\n * fails without another file read.\n */\nexport const loadEndpoint = Effect.fn(\"loadEndpoint\")(function* (path: string) {\n  const fs = yield* FileSystem.FileSystem;\n\n  // It correctly puts retry before decoding and endpoint selection in one pipeline.\n  return yield* fs.readFileString(path).pipe(\n    Effect.retry({ times: 2 }),\n    Effect.flatMap(Schema.decodeUnknownEffect(Configuration)),\n    Effect.map((configuration) => configuration.endpoint),\n  );\n});\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

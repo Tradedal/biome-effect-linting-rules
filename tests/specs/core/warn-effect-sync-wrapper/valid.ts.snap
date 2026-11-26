@@ -1,0 +1,11 @@
+{
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * increment adds one to the supplied counter and returns its new value.\n * Ref.updateAndGet performs the atomic transition when the Effect runs.\n */\nexport const increment = Effect.fn(\"increment\")((counter: Ref.Ref<number>) =>\n  // It correctly returns Ref.updateAndGet directly.\n  Ref.updateAndGet(counter, (count) => count + 1),\n);\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

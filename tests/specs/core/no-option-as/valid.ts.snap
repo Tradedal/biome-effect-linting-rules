@@ -1,0 +1,11 @@
+{
+  "input": "import { Array as Arr, Effect, Option, Schema } from \"effect\";\n\nconst DownloadAccess = Schema.Struct({\n  permissions: Schema.Array(Schema.String),\n  downloadUrl: Schema.NonEmptyString,\n});\n\nconst DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });\n\n/**\n * resolveDownload returns a link only when the decoded access permits downloads.\n * Option.liftPredicate applies that permission check to the constructed link.\n * A missing permission returns None, and malformed access fails decoding.\n */\nexport const resolveDownload = Effect.fn(\"resolveDownload\")(function* (\n  input: unknown,\n) {\n  const access = yield* Schema.decodeUnknownEffect(DownloadAccess)(input);\n  const link = DownloadLink.make({ url: access.downloadUrl });\n\n  // It correctly retains the link only when the download permission is present.\n  return Option.liftPredicate(link, () =>\n    Arr.contains(access.permissions, \"download\"),\n  );\n});\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

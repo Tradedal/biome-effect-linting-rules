@@ -8,27 +8,13 @@
 
 The rules identify anti-patterns such as nested `Effect.gen` blocks and consecutive operations written with `Effect.all`. Each diagnostic explains the pattern and suggests how to rewrite the code.
 
-The rules target Effect 4. Version 0.0.9 is the final release for Effect v3.
+The package moved from `@catenarycloud/linteffect` to `@tradedal/linteffect`. Earlier releases remain available under the original name.
+
+The rules target Effect 4. Version 0.0.9 of `@catenarycloud/linteffect` is the final release for Effect v3.
 
 You can use the full rule set or choose a smaller preset. Start with a smaller preset to introduce the rules to an established project.
 
-For example, this code uses nested Effect calls to fetch a user and read their profile:
-
-```ts
-const loadUser = Effect.map(
-  Effect.flatMap(getUserId, (userId) => fetchUser(userId)),
-  (user) => user.profile
-);
-```
-
-In a pipeline, the calls appear in the order they run:
-
-```ts
-const loadUser = getUserId.pipe(
-  Effect.flatMap((userId) => fetchUser(userId)),
-  Effect.map((user) => user.profile)
-);
-```
+The [file-read example](https://github.com/Tradedal/biome-effect-linting-rules/blob/dev/tests/specs/core/no-call-tower/invalid.ts) nests a retried read inside its decoder. Its [pipeline correction](https://github.com/Tradedal/biome-effect-linting-rules/blob/dev/tests/specs/core/no-call-tower/valid.ts) puts those steps in execution order. Both return the decoded guest name and retry only the file read.
 
 In this demo, Codex uses the rules to refactor [Messages.ts from the Effect Discord bot](https://github.com/Effect-TS/discord-bot/blob/main/packages/discord/src/Messages.ts).
 
@@ -39,7 +25,7 @@ In this demo, Codex uses the rules to refactor [Messages.ts from the Effect Disc
 You can check your code with `npx` without changes to your project's dependencies or configuration. Run this command from your project directory:
 
 ```bash
-npx @catenarycloud/linteffect check src --preset=core
+npx @tradedal/linteffect check src --preset=core
 ```
 
 The command requires Node.js 24 or newer. It checks `src` with the core preset and leaves your source files unchanged. It runs Biome's WebAssembly engine in the same Node.js process, independently of your project's Biome settings. It loads the selected rules into an isolated in-memory workspace and creates no temporary configuration files.
@@ -51,12 +37,12 @@ Choose `core`, `web`, `ts-type`, or `full` with `--preset`. The [preset table](#
 The package includes a [lint guide](./docs/linting.md) for agents to fix lint errors and check the result. Add `--guide` to include its text in the command output, before the diagnostics:
 
 ```bash
-npx @catenarycloud/linteffect check src --preset=core --guide
+npx @tradedal/linteffect check src --preset=core --guide
 ```
 
 If an agent runs this command, it can read the guide along with the lint results.
 
-Use `--help` for the command options. To try a prerelease, use `@catenarycloud/linteffect@dev` in the command.
+Use `--help` for the command options. To try a prerelease, use `@tradedal/linteffect@dev` in the command.
 
 ## Add it to your project
 
@@ -65,26 +51,26 @@ Use `--help` for the command options. To try a prerelease, use `@catenarycloud/l
 Install Biome and the rules with your project's package manager:
 
 ```bash
-npm install -D @biomejs/biome @catenarycloud/linteffect
+npm install -D @biomejs/biome @tradedal/linteffect
 ```
 
 ```bash
-yarn add -D @biomejs/biome @catenarycloud/linteffect
+yarn add -D @biomejs/biome @tradedal/linteffect
 ```
 
 ```bash
-pnpm add -D @biomejs/biome @catenarycloud/linteffect
+pnpm add -D @biomejs/biome @tradedal/linteffect
 ```
 
 Create a `biome.json` or `biome.jsonc` with the core preset in `extends`. If you already have either file, add the preset to its `extends` array and keep the rest of your configuration:
 
 ```jsonc
 {
-  "extends": ["@catenarycloud/linteffect/core"]
+  "extends": ["@tradedal/linteffect/core"]
 }
 ```
 
-The presets use Biome 2.6.3's configuration schema. The standalone CLI bundles the matching WebAssembly engine and does not need a separate Biome installation.
+The presets use Biome 2.6.6's configuration schema. The standalone CLI bundles the matching WebAssembly engine and does not need a separate Biome installation.
 
 With Yarn Berry, set `nodeLinker: node-modules` so Biome can find the rules in `node_modules`.
 
@@ -104,10 +90,10 @@ To change presets, replace the package path in `extends` with one from this tabl
 
 | Package path | Rules included |
 | --- | --- |
-| `@catenarycloud/linteffect` | The full preset, also available as `@catenarycloud/linteffect/recommended` |
-| `@catenarycloud/linteffect/core` | Effect composition, control flow, and execution order |
-| `@catenarycloud/linteffect/web` | React hooks, atom access, state updates, and Vanilla Extract styles |
-| `@catenarycloud/linteffect/ts-type` | Type assertions, data guards, optional values, and string statuses |
+| `@tradedal/linteffect` | The full preset, also available as `@tradedal/linteffect/recommended` |
+| `@tradedal/linteffect/core` | Effect composition, control flow, and execution order |
+| `@tradedal/linteffect/web` | React hooks, atom access, state updates, and Vanilla Extract styles |
+| `@tradedal/linteffect/ts-type` | Type assertions, data guards, optional values, and string statuses |
 
 ### Lint findings
 
@@ -115,13 +101,51 @@ Each diagnostic message suggests a rewrite.
 
 The [guide](./docs/linting.md) explains the diagnostics and how to fix the code. Ask agents to read it before they make changes. Provide the guide separately when the agent uses your project's Biome setup.
 
+### Enable the Effect Language Service checks
+
+Enable these Effect Language Service diagnostics at error severity to replace the removed Biome rules:
+
+| Removed Biome rule | Effect Language Service diagnostic |
+| --- | --- |
+| `no-effect-do` | `effectDoNotation` |
+| `no-effect-sync-console` | `globalConsoleInEffect` |
+| `no-pipe-ladder` | `unnecessaryPipeChain` |
+
+TypeScript also rejects the removed `Effect.async` API, so the presets no longer include `no-effect-async`.
+
+Install the language service and TypeScript in your project:
+
+```sh
+yarn add -D @effect/language-service@0.87.5 typescript@~5.9.3
+```
+
+Merge `compilerOptions.plugins` from the [configuration example](./examples/tsconfig.effect.jsonc) into your `tsconfig.json`. Keep your existing compiler settings and other plugins.
+
+Run the compiler patch as part of your typecheck so it reapplies after dependency updates. For example, add this script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "typecheck": "effect-language-service patch && tsc --noEmit"
+  }
+}
+```
+
+For an existing typecheck script, put the patch before its compiler command and preserve its flags. Run `yarn typecheck` after dependency installation in CI.
+
+Configure your editor to use the project's TypeScript installation. In VS Code, run `TypeScript: Select TypeScript Version`, choose `Use Workspace Version`, then run `TypeScript: Restart TS Server`.
+
+`linteffect check` runs the Biome rules. Run the patched typecheck alongside it to enforce these three replacements.
+
 ## Develop and contribute
 
 Clone this repository and install its development dependencies with `yarn install`. Run `yarn test` to check the rules and `yarn build` to regenerate project files, run the tests, and create the npm archive.
 
-`yarn lint` checks implementation code with the installed `@catenarycloud/linteffect@dev` package. `yarn lint:dev` selects it explicitly. Yarn locks the installed release; run `yarn up -R @catenarycloud/linteffect` to update that resolution without replacing the dev tag with a version range.
+Until the first stable release under the new scope, development checks use the stable package under its original name.
 
-`yarn lint:local` checks the same files with this checkout's rules. Both configurations share formatting, import organization, recommended Biome rules, and Git ignore settings. Fixture source files stay outside these checks because they contain deliberate violations. Pass a path to focus either check:
+`yarn lint` checks implementation code with the installed `@catenarycloud/linteffect@latest` package. `yarn lint:dev` selects that installed package explicitly. Yarn locks the stable release; run `yarn up -R @catenarycloud/linteffect` to update that resolution without replacing the latest tag with a version range.
+
+`yarn lint:local` checks the same files with this checkout's rules. Both configurations share formatting, import organization, recommended Biome rules, and Git ignore settings. Fixture source receives formatting checks only because it contains deliberate lint violations. Pass a path to focus either check:
 
 ```sh
 yarn lint:dev src/cli.ts
@@ -134,11 +158,15 @@ Tests and builds run `yarn lint`. Set `BIOME_CONFIG_PATH=biome.local.jsonc` to u
 
 The Effect Language Service checks Effect usage and boolean conditions in editors and `yarn typecheck`. Compiler tasks apply its patch automatically. `yarn effect:diagnostics` reports its findings separately. Errors fail the typecheck; warnings and suggestions do not. Biome checks syntax and format.
 
-Add rule test cases using the [fixture layout and commands](tests/specs/README.md).
+`yarn typecheck` also compiles every rule fixture and composition example. Run `yarn typecheck:fixtures` to check those examples separately. Their compiler configuration omits the LSP plugin because the invalid fixtures deliberately trigger lint diagnostics.
+
+Fixture tests also check each example against the full preset and shared built-in lint rules. They reject diagnostics beyond those from the selected rule, including warnings and informational findings. These checks run automatically in `yarn test`, without the fixture lint overrides.
+
+Add rule test cases using the [fixture layout](docs/rules-development.md#fixture-layout) and [test commands](docs/rules-development.md#run-and-review-fixtures).
 
 The rules are in `rules/*.grit`, and the files in `configs/` list the rules for each preset. The project uses Projen. Edit [`.projenrc.ts`](./.projenrc.ts) to change package metadata or build tasks.
 
-The [rule development guide](./docs/rule-guidance.md) explains how to write a rule, test it against valid and invalid code, and add it to a preset. Follow [docs/unslop.md](./docs/unslop.md) for documentation and diagnostic messages.
+The [guide for rule development](./docs/rules-development.md) explains how to write and test a rule and add it to a preset. The [implementation documentation guide](./docs/code-documentation.md) covers comments in the repository's own implementation. Fixture and composition comments follow the [example guide](./docs/rules-development.md#write-fixtures-as-learning-examples). Follow [docs/unslop.md](./docs/unslop.md) for other documentation and diagnostic messages.
 
 ## Forks and similar projects
 

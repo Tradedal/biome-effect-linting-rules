@@ -1,0 +1,41 @@
+{
+  "input": "import { Data, Effect, Option } from \"effect\";\n\ninterface Session {\n  readonly displayName: string;\n}\n\nclass SessionMissing extends Data.TaggedError(\"SessionMissing\") {}\n\n/**\n * requireSession returns the active session or refuses access when it is absent.\n * The absent branch throws an expected rejection as a defect. sessionMessage\n * cannot convert that defect into its sign-in prompt through ordinary recovery.\n */\nexport const requireSession = Effect.fn(\"requireSession\")(\n  (session: Option.Option<Session>) =>\n    Option.match(session, {\n      onSome: Effect.succeed,\n      onNone: () =>\n        Effect.sync(() => {\n          // It incorrectly throws the expected SessionMissing rejection as a defect.\n          throw new SessionMissing();\n        }),\n    }),\n);\n\n/**\n * sessionMessage welcomes an active user or asks an unauthenticated user to\n * sign in. Effect.match handles typed failures, so the thrown rejection prevents\n * the sign-in prompt from being returned.\n */\nexport const sessionMessage = Effect.fn(\"sessionMessage\")(\n  (session: Option.Option<Session>) =>\n    requireSession(session).pipe(\n      // It correctly handles typed failures, but the thrown rejection bypasses it.\n      Effect.match({\n        onFailure: () => \"Please sign in\",\n        onSuccess: ({ displayName }) => `Welcome, ${displayName}`,\n      }),\n    ),\n);\n",
+  "result": {
+    "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This preset requires explicit failures in Effect composition instead of throw statements. Use Effect.fail for expected errors or Effect.die for defects, and wrap external throwing work with Effect.try or Effect.tryPromise so callers can compose recovery.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This preset requires explicit failures in Effect composition instead of throw statements. Use Effect.fail for expected errors or Effect.die for defects, and wrap external throwing work with Effect.try or Effect.tryPromise so callers can compose recovery."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-throw-statement/invalid.ts"
+          },
+          "span": [
+            720,
+            747
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      }
+    ],
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

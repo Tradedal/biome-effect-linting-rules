@@ -1,0 +1,11 @@
+{
+  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * readCounter returns the current counter value when its Effect runs.\n * Its return type follows the operation without a separate channel annotation.\n */\nexport const readCounter = Effect.fn(\"readCounter\")(\n  (counter: Ref.Ref<number>) =>\n    // It correctly infers the channels from the returned operation.\n    Ref.get(counter),\n);\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

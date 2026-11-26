@@ -1,0 +1,99 @@
+{
+  "input": "import { Duration, Effect, Match, Schema } from \"effect\";\nimport { HttpClient, HttpClientResponse } from \"effect/http\";\n\nconst Catalog = Schema.Array(\n  Schema.Struct({ id: Schema.NonEmptyString, title: Schema.NonEmptyString }),\n);\n\n/**\n * makeCatalogQueries exposes a catalog read and a refresh that also reports the\n * item count. A normal refresh times out after five seconds; a long poll has no\n * deadline. The constructor stages the request before decoding, and refresh\n * stages the timed read before the summary. The preset requires each complete\n * operation to keep those dependent steps together.\n */\nexport const makeCatalogQueries = Effect.fn(\"makeCatalogQueries\")(function* (\n  catalogUrl: string,\n) {\n  const client = yield* HttpClient.HttpClient;\n\n  // It incorrectly stages the request before the catalog decoder.\n  const request = client\n    .get(catalogUrl)\n    .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk));\n  const read = request.pipe(\n    Effect.flatMap(HttpClientResponse.schemaBodyJson(Catalog)),\n  );\n\n  const refresh = Effect.fn(\"Catalog.refresh\")(function* (longPoll: boolean) {\n    const timeout = Match.value(longPoll).pipe(\n      Match.when(true, () => Duration.infinity),\n      Match.orElse(() => Duration.seconds(5)),\n    );\n\n    // It incorrectly stages the timed read before the summary.\n    const timed = read.pipe(Effect.timeout(timeout));\n    const summarized = timed.pipe(\n      Effect.map((items) => ({ items, count: items.length })),\n    );\n\n    return yield* summarized;\n  });\n\n  return { read, refresh };\n});\n",
+  "result": {
+    "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-effect-step-const-staging/invalid.ts"
+          },
+          "span": [
+            833,
+            938
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-effect-step-const-staging/invalid.ts"
+          },
+          "span": [
+            1337,
+            1386
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Inline intermediate Effect steps into the operation's pipeline. The reader must follow separate constant declarations to reconstruct validation, decisions, and dependent work. Use Effect.flatMap or Effect.andThen to connect dependent steps. Keep complete service constructors and operations exposed through the service's returned API. Exported Effect values and functions defined with Effect.fn or Effect.fnUntraced are valid API operations. Local constants for final domain values remain valid."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-effect-step-const-staging/invalid.ts"
+          },
+          "span": [
+            1391,
+            1491
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      }
+    ],
+    "errors": 3,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

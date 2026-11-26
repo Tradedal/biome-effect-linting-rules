@@ -1,0 +1,41 @@
+{
+  "input": "import { createHash } from \"node:crypto\";\n\nimport { Effect, FileSystem } from \"effect\";\n\n/**\n * fingerprintFile returns a content hash for a watcher to compare with its\n * previous hash. An unreadable file or a hash exception produces undefined.\n * The filesystem service reports read failures through Effect, but the hash\n * callback handles its synchronous exception with a try/catch statement.\n * The preset requires both failures to reach the same Effect recovery.\n */\nexport const fingerprintFile = Effect.fn(\"fingerprintFile\")(function* (\n  file: string,\n) {\n  const fs = yield* FileSystem.FileSystem;\n\n  return yield* fs.readFile(file).pipe(\n    Effect.map((bytes) => {\n      // It incorrectly handles the hash exception with try/catch.\n      try {\n        return createHash(\"sha256\").update(bytes).digest(\"base64url\");\n      } catch {\n        return undefined;\n      }\n    }),\n    Effect.orElseSucceed(() => undefined),\n  );\n});\n",
+  "result": {
+    "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "lintEffect's no-try-catch rule requires exception handling and cleanup in Result or Effect expressions. Use Result.try for synchronous exceptions. In Effect code, capture external exceptions with Effect.try or Effect.tryPromise and recover with Effect.catch. Replace finally with Effect.ensuring or scoped resource management. Keep the original result, failure handling, and cleanup behavior.",
+        "message": [
+          {
+            "elements": [],
+            "content": "lintEffect's no-try-catch rule requires exception handling and cleanup in Result or Effect expressions. Use Result.try for synchronous exceptions. In Effect code, capture external exceptions with Effect.try or Effect.tryPromise and recover with Effect.catch. Replace finally with Effect.ensuring or scoped resource management. Keep the original result, failure handling, and cleanup behavior."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-try-catch/invalid.ts"
+          },
+          "span": [
+            750,
+            876
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      }
+    ],
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

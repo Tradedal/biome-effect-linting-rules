@@ -1,0 +1,41 @@
+{
+  "input": "import { Array as Arr, Effect, Option, Schema } from \"effect\";\n\nconst DownloadAccess = Schema.Struct({\n  permissions: Schema.Array(Schema.String),\n  downloadUrl: Schema.NonEmptyString,\n});\n\nconst DownloadLink = Schema.Struct({ url: Schema.NonEmptyString });\n\n/**\n * resolveDownload returns a link only when the decoded access permits downloads.\n * It finds a permission string just to replace it with the link. The preset\n * prohibits Option.as; Option.liftPredicate can check access on the link itself.\n */\nexport const resolveDownload = Effect.fn(\"resolveDownload\")(function* (\n  input: unknown,\n) {\n  const access = yield* Schema.decodeUnknownEffect(DownloadAccess)(input);\n  const link = DownloadLink.make({ url: access.downloadUrl });\n\n  return Arr.findFirst(\n    access.permissions,\n    (permission) => permission === \"download\",\n  ).pipe(\n    // It incorrectly passes the link directly to Option.as.\n    Option.as(link),\n  );\n});\n",
+  "result": {
+    "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "Replace Option.as with Option.map or Option.match. This rule requires value selection to appear in a callback so the result choice is explicit. Return the selected value from the callback and preserve the Option's absence behavior.",
+        "message": [
+          {
+            "elements": [],
+            "content": "Replace Option.as with Option.map or Option.match. This rule requires value selection to appear in a callback so the result choice is explicit. Return the selected value from the callback and preserve the Option's absence behavior."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-option-as/invalid.ts"
+          },
+          "span": [
+            911,
+            926
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      }
+    ],
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

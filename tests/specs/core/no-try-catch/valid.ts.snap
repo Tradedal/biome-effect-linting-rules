@@ -1,0 +1,11 @@
+{
+  "input": "import { createHash } from \"node:crypto\";\n\nimport { Effect, FileSystem } from \"effect\";\n\n/**\n * fingerprintFile returns a content hash for a watcher to compare with its\n * previous hash. The filesystem service reads the bytes, and Effect.try captures\n * a synchronous hash exception. Recovery covers both operations, so an\n * unreadable file or a hash exception still produces undefined.\n */\nexport const fingerprintFile = Effect.fn(\"fingerprintFile\")(function* (\n  file: string,\n) {\n  const fs = yield* FileSystem.FileSystem;\n\n  return yield* fs.readFile(file).pipe(\n    // It correctly captures the hash exception before the shared recovery.\n    Effect.flatMap((bytes) =>\n      Effect.try(() => createHash(\"sha256\").update(bytes).digest(\"base64url\")),\n    ),\n    Effect.orElseSucceed(() => undefined),\n  );\n});\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}

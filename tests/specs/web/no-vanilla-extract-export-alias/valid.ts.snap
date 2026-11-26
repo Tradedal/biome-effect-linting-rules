@@ -1,0 +1,11 @@
+{
+  "input": "import { style } from \"@vanilla-extract/css\";\n\n/**\n * The classes correctly use their style declarations as their only exported\n * names. Consumers can identify each class and its definition without\n * following an alias.\n */\nexport const panel =\n  // It correctly exports the panel style under one name.\n  style({ width: \"100%\" });\nexport const heading = style({ fontWeight: 600 });\n\n/**\n * The compact class correctly adds its own styles to the panel class.\n * Vanilla Extract generates a new class for that composition.\n */\nexport const compactPanel =\n  // It correctly composes a new class with additional styles.\n  style([panel, { minWidth: 0 }]);\n",
+  "result": {
+    "diagnostics": [],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "parseErrors": 0,
+    "skippedDiagnostics": 0
+  }
+}
