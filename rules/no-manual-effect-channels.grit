@@ -1,18 +1,193 @@
 language js(typescript, jsx)
 
-// This rule keeps implemented Effect and Layer channels inferred. Input types
-// declare work supplied by the caller and have no local implementation to infer.
 or {
-  `Effect.Effect<$channels>` as $match,
-  `Layer.Layer<$channels>` as $match
-} where {
-  $match <: not within or {
-    `Context.Service<$self, $contract>()`,
-    TsInterfaceDeclaration(),
-    TsTypeAliasDeclaration()
+  or {
+    `Effect.Effect<$channels>` as $match,
+    `Layer.Layer<$channels>` as $match
+  } where {
+    $match <: not within or {
+      `Context.Service<$self, $contract>()`,
+      TsInterfaceDeclaration(),
+      TsTypeAliasDeclaration()
+    },
+    not input_contract(match=$match),
+    register_diagnostic(span=$match, message="Let TypeScript infer the Effect or Layer type from the composed operation. Manual result, error, and dependency annotations duplicate a contract that the operation already defines. Remove the explicit Effect.Effect or Layer.Layer annotation and return the operation directly. Keep explicit input contracts and public contracts in Context.Service, interfaces, and domain type declarations.", severity="error")
   },
-  not input_contract(match=$match),
-  register_diagnostic(span=$match, message="Let TypeScript infer the Effect or Layer type from the composed operation. Manual result, error, and dependency annotations duplicate a contract that the operation already defines. Remove the explicit Effect.Effect or Layer.Layer annotation and return the operation directly. Keep explicit input contracts and public contracts in Context.Service, interfaces, and domain type declarations.", severity="error")
+  TsReferenceType(type_arguments=TsTypeArguments(ts_type_argument_list=$arguments)) as $match where {
+    $match <: within JsFormalParameter(binding=JsIdentifierBinding() as $input, type_annotation=TsTypeAnnotation(ty=$match)) as $parameter,
+    $parameter <: within JsParameters(items=$formals) as $parameters,
+    $formals <: not [
+      ..., JsFormalParameter(initializer=JsInitializerClause()), ...
+    ],
+    $parameters <: within function_implementation(parameters=$parameters, types=$types, body=$body) as $owner,
+    $owner <: not r"(?s)^(?:async\b|\*|function(?:\s|/\*.*?\*/|//[^\n]*\n)*\*).*",
+    $types <: TsTypeParameters(items=$typeParameters),
+    $body <: or {
+      native_forwarding(namespace=$namespace, input=$input),
+      JsFunctionBody(directives=[], statements=[
+        JsReturnStatement(argument=native_forwarding(namespace=$namespace, input=$input)),
+      ])
+    },
+    $arguments <: every local_channel(typeParameters=$typeParameters),
+    $match <: or {
+      channel_type(namespace=$namespace),
+      module_channel_alias(namespace=$namespace, owner=$owner)
+    },
+    native_namespace(use=$namespace),
+    register_diagnostic(span=$match, message="This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.", severity="error")
+  }
+}
+
+pattern function_implementation($parameters, $types, $body) {
+  or {
+    JsArrowFunctionExpression(parameters=$parameters, type_parameters=$types, body=$body),
+    JsFunctionDeclaration(parameters=$parameters, type_parameters=$types, body=$body),
+    JsFunctionExpression(parameters=$parameters, type_parameters=$types, body=$body),
+    JsMethodObjectMember(parameters=$parameters, type_parameters=$types, body=$body)
+  }
+}
+
+// The retry, exit, fresh, and orDie signatures in
+// refs/effect/packages/effect/src/{Effect,Layer}.ts define where the operator takes its input.
+pattern native_forwarding($namespace, $input) {
+  or {
+    `$work.pipe($operator($_))` where { $operator <: `Effect.retry` },
+    `$operator($work, $_)` where { $operator <: `Effect.retry` },
+    `$operator($work)` where { $operator <: unary_operator() },
+    `$work.pipe($operator)` where { $operator <: unary_operator() }
+  } where {
+    $work <: JsIdentifierExpression(),
+    $operator <: JsStaticMemberExpression(object=$namespace),
+    $inputName = text($input),
+    $workName = text($work),
+    $inputName == $workName
+  }
+}
+
+pattern unary_operator() {
+  or {
+    `Effect.exit`,
+    `Layer.fresh`,
+    `Layer.orDie`
+  }
+}
+
+predicate native_namespace($use) {
+  $name = text($use),
+  $use <: within JsModule(items=[
+    ..., JsImport(import_clause=native_import(name=$name)), ...
+  ]),
+  $use <: not within namespace_shadow(name=$name)
+}
+
+pattern native_import($name) {
+  or {
+    or {
+      JsImportNamedClause(source=`"effect"`, named_specifiers=$specifiers),
+      JsImportCombinedClause(source=`"effect"`, specifier=$specifiers)
+    } where {
+      $specifiers <: JsNamedImportSpecifiers(specifiers=[
+        ...,
+        JsShorthandNamedImportSpecifier(local_name=binding_named(name=$name)),
+        ...
+      ])
+    },
+    JsImportNamespaceClause(source=r"['\"]effect/(Effect|Layer)['\"]"($export), namespace_specifier=JsNamespaceImportSpecifier(local_name=binding_named(name=$name))) where {
+      $export == $name
+    }
+  }
+}
+
+// The operator must refer to the import at the call site. Searches of
+// enclosing parameter lists and statement lists stop at nested scopes.
+pattern namespace_shadow($name) {
+  or {
+    function_implementation(parameters=$parameters, types=$_, body=$_) where {
+      $parameters <: contains binding_named(name=$name) until JsInitializerClause()
+    },
+    JsCatchClause(declaration=JsCatchDeclaration(binding=contains binding_named(name=$name))),
+    or {
+      JsFunctionBody(statements=$statements),
+      JsBlockStatement(statements=$statements)
+    } where {
+      $statements <: contains or {
+        JsVariableDeclarator(id=contains binding_named(name=$name)),
+        JsFunctionDeclaration(id=binding_named(name=$name)),
+        JsClassDeclaration(id=binding_named(name=$name))
+      } until or {
+        JsFunctionBody(),
+        JsBlockStatement(),
+        JsArrowFunctionExpression(),
+        JsFunctionExpression()
+      }
+    }
+  }
+}
+
+pattern binding_named($name) {
+  JsIdentifierBinding() as $binding where {
+    $bindingName = text($binding),
+    $bindingName == $name
+  }
+}
+
+pattern channel_type($namespace) {
+  or {
+    `Effect.Effect<$channels>`,
+    `Layer.Layer<$channels>`
+  } as $type where {
+    $type <: TsReferenceType(name=TsQualifiedName(left=$qualifier)),
+    $typeName = text($qualifier),
+    $operatorName = text($namespace),
+    $typeName == $operatorName
+  }
+}
+
+// A direct alias can use the same module's declarations. Restrict lookup to
+// module items so a local alias cannot be mistaken for a different type.
+pattern module_channel_alias($namespace, $owner) {
+  TsReferenceType(name=JsReferenceIdentifier() as $reference) where {
+    $owner <: within JsModule(items=$items) until or {
+      JsFunctionBody(),
+      JsBlockStatement(),
+      JsSwitchStatement(),
+      TsModuleBlock()
+    },
+    $items <: [
+      ..., channel_alias(reference=$reference, namespace=$namespace), ...
+    ]
+  }
+}
+
+pattern channel_alias($reference, $namespace) {
+  TsTypeAliasDeclaration(binding_identifier=$binding, type_parameters=TsTypeParameters(items=$parameters), ty=$target) where {
+    $name = text($binding),
+    $referenceName = text($reference),
+    $name == $referenceName,
+    $target <: channel_type(namespace=$namespace),
+    $target <: TsReferenceType(type_arguments=TsTypeArguments(ts_type_argument_list=$arguments)),
+    $arguments <: every local_channel(typeParameters=$parameters)
+  }
+}
+
+pattern local_channel($typeParameters) {
+  TsReferenceType(name=JsReferenceIdentifier() as $channel) where {
+    $typeParameters <: [
+      ..., unconstrained_type_parameter(channel=$channel), ...
+    ]
+  }
+}
+
+pattern unconstrained_type_parameter($channel) {
+  TsTypeParameter(name=$name) as $parameter where {
+    $parameter <: not or {
+      TsTypeParameter(constraint=TsTypeConstraintClause()),
+      TsTypeParameter(default=TsDefaultTypeClause())
+    },
+    $nameText = text($name),
+    $channelText = text($channel),
+    $nameText == $channelText
+  }
 }
 
 // Only the parameter's own type annotation is a caller-supplied contract.

@@ -1,7 +1,94 @@
 {
-  "input": "import { Effect, Ref } from \"effect\";\n\n/**\n * readCounter returns the current counter value when its Effect runs.\n * Its explicit return annotation duplicates the channels determined by Ref.get.\n */\nexport const readCounter = Effect.fn(\"readCounter\")(\n  // It incorrectly annotates channels already inferred from Ref.get.\n  (counter: Ref.Ref<number>): Effect.Effect<number> => Ref.get(counter),\n);\n",
+  "input": "import {\n  Context,\n  type Duration,\n  Effect,\n  flow,\n  Layer,\n  Ref,\n  Schedule,\n} from \"effect\";\n\n/**\n * A badge kiosk starts a session with the ID from its card reader. Each session\n * keeps its own selection. When the operator requests a badge, the kiosk looks\n * up the selected ID and gives the display the outcome, including any failure.\n * See {@link Layer.fresh} for session isolation and {@link Effect.retry} and\n * {@link Schedule.upTo} for the directory's retry policy.\n * Compare the [same kiosk with inferred channels](./valid.ts).\n */\nclass Selection extends Context.Service<Selection, Ref.Ref<string>>()(\n  \"example/Selection\",\n) {}\n\ntype Badge = { readonly displayName: string };\ntype LookupFailure =\n  | { readonly _tag: \"Busy\" }\n  | { readonly _tag: \"UnknownBadge\" };\n\n/** A card can move during a scan. Give the reader one more attempt if it throws. */\nconst retryOnce = <Value, Failure, Services>(\n  // This wrapper repeats the input signature of Effect.retry.\n  work: Effect.Effect<Value, Failure, Services>,\n) => work.pipe(Effect.retry({ times: 1 }));\n\nconst scanCard = (read: () => string) =>\n  retryOnce(Effect.try({ try: read, catch: () => \"Unreadable card\" }));\n\n/** Two kiosks must be able to select different badges in the same application. */\nconst sessionLayers = {\n  isolate<Provided, Issue>(\n    // Layer.fresh already infers which service the layer provides.\n    layer: Layer.Layer<Provided, Issue>,\n  ) {\n    return Layer.fresh(layer);\n  },\n};\n\ntype StartupLayer<Provided, Failure> = Layer.Layer<Provided, Failure>;\n\n/** A kiosk cannot start a session until it has read a card. */\nconst requireStartup = <Provided, Issue>(\n  // The alias repeats the channels of the layer passed to Layer.orDie.\n  startup: StartupLayer<Provided, Issue>,\n) => Layer.orDie(startup);\n\n/** Build a separate selection for each kiosk. An unreadable card stops startup. */\nexport const startSession = (read: () => string) =>\n  requireStartup(\n    sessionLayers.isolate(\n      Layer.effect(Selection, scanCard(read).pipe(Effect.flatMap(Ref.make))),\n    ),\n  );\n\n/** Read the current selection each time the operator requests a badge. */\nconst selectedId = Effect.fn(\"selectedId\")(\n  // The explicit result repeats the string type supplied by Ref.get.\n  (selection: Ref.Ref<string>): Effect.Effect<string> => Ref.get(selection),\n);\n\n/** A busy directory can recover within the kiosk's time budget. */\nfunction retryWithin<Issue, Value, Access>(\n  // Sharing the failure type with the predicate still leaves Effect.retry able to infer it.\n  lookup: Effect.Effect<Value, Issue, Access>,\n  canRetry: (failure: Issue) => boolean,\n  budget: Duration.Input,\n) {\n  return lookup.pipe(\n    Effect.retry({\n      while: canRetry,\n      schedule: Schedule.exponential(\"20 millis\").pipe(\n        Schedule.upTo({ duration: budget }),\n      ),\n    }),\n  );\n}\n\n/** Retry a busy directory with exponential backoff. An unknown badge fails immediately. */\nfunction lookupSelection<Services>(\n  lookup: (id: string) => Effect.Effect<Badge, LookupFailure, Services>,\n  budget: Duration.Input,\n) {\n  return Effect.gen(function* () {\n    const selection = yield* Selection;\n    const id = yield* selectedId(selection);\n\n    return yield* retryWithin(\n      lookup(id),\n      (failure) => failure._tag === \"Busy\",\n      budget,\n    );\n  });\n}\n\n/** Give the display the badge or the cause of the failed lookup as an Exit. */\nexport const displayBadge = flow(\n  lookupSelection,\n  function <Reading, Failure, Services>(\n    // The callback duplicates the signature of Effect.exit.\n    lookup: Effect.Effect<Reading, Failure, Services>,\n  ) {\n    return lookup.pipe(Effect.exit);\n  },\n);\n",
   "result": {
     "diagnostics": [
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-manual-effect-channels/invalid.ts"
+          },
+          "span": [
+            991,
+            1030
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-manual-effect-channels/invalid.ts"
+          },
+          "span": [
+            1405,
+            1433
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-manual-effect-channels/invalid.ts"
+          },
+          "span": [
+            1742,
+            1771
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
       {
         "category": "plugin",
         "severity": "error",
@@ -23,8 +110,66 @@
             "file": "/project/core/no-manual-effect-channels/invalid.ts"
           },
           "span": [
-            352,
-            373
+            2294,
+            2315
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-manual-effect-channels/invalid.ts"
+          },
+          "span": [
+            2558,
+            2593
+          ],
+          "sourceCode": null
+        },
+        "tags": [],
+        "source": null
+      },
+      {
+        "category": "plugin",
+        "severity": "error",
+        "description": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer.",
+        "message": [
+          {
+            "elements": [],
+            "content": "This wrapper redeclares the channels inferred by the native combinator. Apply the combinator where you compose the Effect or Layer."
+          }
+        ],
+        "advices": {
+          "advices": []
+        },
+        "verboseAdvices": {
+          "advices": []
+        },
+        "location": {
+          "path": {
+            "file": "/project/core/no-manual-effect-channels/invalid.ts"
+          },
+          "span": [
+            3578,
+            3619
           ],
           "sourceCode": null
         },
@@ -32,7 +177,7 @@
         "source": null
       }
     ],
-    "errors": 1,
+    "errors": 6,
     "warnings": 0,
     "infos": 0,
     "parseErrors": 0,

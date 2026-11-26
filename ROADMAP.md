@@ -10,6 +10,10 @@ All three changes were published in `@tradedal/linteffect@0.1.1-dev.3` under npm
 
 The consumer rerun verified the React, Effect staging, and short lookup cases. A generic fixture covers deferred CLI handlers. The full suite passed all 159 tests with the checkout rules enabled, and both typechecks passed.
 
+## Channel annotations
+
+- [x] [no-manual-effect-channels](rules/no-manual-effect-channels.grit) reports generic inputs that a wrapper passes directly to `Effect.retry`, `Effect.exit`, `Layer.fresh`, or `Layer.orDie`. The fixtures cover arrows, named functions, object methods, callbacks, and direct module-level aliases. Each redundant annotation receives one error. Typed retry predicates can use the failure channel. The valid cases retain constrained failures, required services, parameter defaults, and a scoped opener whose Effect and Stream have separate failure channels.
+
 ## Rule policy decisions
 
 - **Dynamic imports in CLI entry points.** Decide whether [`prevent-dynamic-imports`](rules/prevent-dynamic-imports.grit) should permit a CLI to load a selected command tree when the tree depends on code that the CLI generates. Keep coverage for dynamic imports inside domain operations.
