@@ -70,7 +70,7 @@ Create a `biome.json` or `biome.jsonc` with the core preset in `extends`. If you
 }
 ```
 
-The presets use Biome 2.6.6's configuration schema. The standalone CLI bundles the matching WebAssembly engine and does not need a separate Biome installation.
+The presets use Biome 2.6.9's configuration schema. The standalone CLI bundles the matching WebAssembly engine.
 
 With Yarn Berry, set `nodeLinker: node-modules` so Biome can find the rules in `node_modules`.
 
@@ -141,9 +141,7 @@ Configure your editor to use the project's TypeScript installation. In VS Code, 
 
 Clone this repository and install its development dependencies with `yarn install`. Run `yarn test` to check the rules and `yarn build` to regenerate project files, run the tests, and create the npm archive.
 
-Until the first stable release under the new scope, development checks use the stable package under its original name.
-
-`yarn lint` checks implementation code with the installed `@catenarycloud/linteffect@latest` package. `yarn lint:dev` selects that installed package explicitly. Yarn locks the stable release; run `yarn up -R @catenarycloud/linteffect` to update that resolution without replacing the latest tag with a version range.
+`yarn lint:dev` checks implementation code against the installed stable release of `@tradedal/linteffect`. The `npm:latest` dependency resolves to the published package. Run `yarn up -R @tradedal/linteffect` to refresh its lockfile entry.
 
 `yarn lint:local` checks the same files with this checkout's rules. Both configurations share formatting, import organization, recommended Biome rules, and Git ignore settings. Fixture source receives formatting checks only because it contains deliberate lint violations. Pass a path to focus either check:
 

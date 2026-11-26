@@ -50,23 +50,22 @@ const synthesize = Effect.fn("synthesize")(function* () {
     description:
       "Biome Grit rules for declarative Effect TypeScript composition and repository-wide style consistency.",
     deps: [
-      "@biomejs/wasm-nodejs@2.6.6",
-      "@effect/platform-node-shared@4.1.0",
-      "effect@4.1.0",
+      "@biomejs/wasm-nodejs@2.6.9",
+      "@effect/platform-node-shared@4.1.6",
+      "effect@4.1.6",
     ],
     devDeps: [
-      "@biomejs/biome@2.6.6",
-      "@catenarycloud/linteffect@latest",
-      "@effect/atom-react@4.1.0",
+      "@biomejs/biome@2.6.9",
+      "@tradedal/linteffect@npm:latest",
+      "@effect/atom-react@4.1.6",
       "@effect/language-service@0.87.5",
       "@types/node@^24",
-      "@types/react@19.3.0",
+      "@types/react@19.3.3",
       "@vanilla-extract/css@1.21.3",
-      "projen@^0.98.34",
-      "react@19.2.9",
+      "react@19.3.1",
       "scheduler@0.28.0",
       "tsx@^4.20.6",
-      "typescript@^5.9.3",
+      "typescript@^6.0.3",
       "vite@^8",
       "vitest@^5.0.5",
     ],
@@ -92,6 +91,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
     packageManager: javascript.NodePackageManager.YARN_BERRY,
     packageName: "@tradedal/linteffect",
     prettier: false,
+    projenVersion: "^0.105.13",
     releaseToNpm: true,
     release: true,
     releaseTrigger: ReleaseTrigger.workflowDispatch(),
@@ -297,7 +297,7 @@ const synthesize = Effect.fn("synthesize")(function* () {
     obj: {
       $schema: "./node_modules/@biomejs/biome/configuration_schema.json",
       root: true,
-      extends: ["./biome.base.jsonc", "@catenarycloud/linteffect"],
+      extends: ["./biome.base.jsonc", "@tradedal/linteffect"],
     },
   });
 
@@ -348,10 +348,6 @@ const synthesize = Effect.fn("synthesize")(function* () {
         const buildWorkflow = github.workflows.find(
           (workflow) => workflow.name === "build",
         );
-        const upgradeWorkflows = github.workflows.filter((workflow) =>
-          workflow.name.startsWith("upgrade-"),
-        );
-
         Option.fromNullishOr(buildWorkflow).pipe(
           Option.match({
             onNone: () => undefined,
@@ -383,27 +379,10 @@ const synthesize = Effect.fn("synthesize")(function* () {
                   "/jobs/build/steps/0/with/repository",
                   `\${{ github.event_name == 'workflow_dispatch' && (inputs.repository || github.repository) || github.event.pull_request.head.repo.full_name }}`,
                 ),
-                JsonPatch.add(
-                  "/jobs/build/steps/2/with/package-manager-cache",
-                  false,
-                ),
-                JsonPatch.replace(
-                  "/jobs/self-mutation/if",
-                  "always() && github.event_name == 'pull_request' && needs.build.outputs.self_mutation_happened && github.event.pull_request.head.repo.full_name == github.repository",
-                ),
               );
             },
           }),
         );
-
-        Arr.forEach(upgradeWorkflows, (upgradeWorkflow) => {
-          upgradeWorkflow.file?.patch(
-            JsonPatch.add(
-              "/jobs/upgrade/steps/2/with/package-manager-cache",
-              false,
-            ),
-          );
-        });
       },
     }),
   );

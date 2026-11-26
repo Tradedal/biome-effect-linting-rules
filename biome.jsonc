@@ -3,6 +3,6 @@
   "root": true,
   "extends": [
     "./biome.base.jsonc",
-    "@catenarycloud/linteffect"
+    "@tradedal/linteffect"
   ]
 }

@@ -74,7 +74,7 @@ For rule changes, run the relevant tests and then the full suite. For package or
 
 Use `yarn test:update` after an intentional change to a rule or fixture. The task formats source before it updates snapshots, then runs the same checks as `yarn test`. Review the resulting source and diagnostic diffs together. `yarn test` checks formatting before it compiles or executes tests.
 
-The installed stable release is locked in `yarn.lock`. Update it with `yarn up -R @catenarycloud/linteffect` so the dependency keeps its latest tag. Compare published and local diagnostics during rule development. Do not suppress findings or change valid code solely to accommodate a published matcher bug.
+The installed stable release is locked in `yarn.lock`. Update it with `yarn up -R @tradedal/linteffect` to refresh the `npm:latest` resolution. Compare published and local diagnostics during rule development. Do not suppress findings or change valid code solely to accommodate a published matcher bug.
 
 `tsconfig.json` configures the Effect Language Service. The compile and typecheck tasks apply its compiler patch before they run TypeScript. The workspace compiler and editor use that configuration. Effect errors fail compilation; warnings and suggestions remain visible. Repair the service composition or implementation that caused a diagnostic. Do not widen Effect channels or add casts to hide it.
 
