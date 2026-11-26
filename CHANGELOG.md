@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1-dev.4](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.3...v0.1.1-dev.4) (2026-11-26)
+
+
+### Miscellaneous Chores
+
+* prepare next dev release ([bfc93aa](https://github.com/Tradedal/biome-effect-linting-rules/commit/bfc93aab42473b86881a7bd56cc5aed3559e4a2a))
+
 ## [0.1.1-dev.3](https://github.com/Tradedal/biome-effect-linting-rules/compare/v0.1.1-dev.2...v0.1.1-dev.3) (2026-11-24)
 
 
